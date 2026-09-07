@@ -1,0 +1,5 @@
+﻿school_code,name,address,district,city,contact_name,email,cluster_code,status
+DEMO-S001,Demo School 01,Synthetic address — not a real location,Demo District,Demo City,Demo School Contact 01,school1@example.invalid,DEMO-CA,Active
+DEMO-S002,Demo School 02,Synthetic address — not a real location,Demo District,Demo City,Demo School Contact 02,school2@example.invalid,DEMO-CA,Active
+DEMO-S003,Demo School 03,Synthetic address — not a real location,Demo District,Demo City,Demo School Contact 03,school3@example.invalid,DEMO-CB,Active
+DEMO-S004,Demo School 04,Synthetic address — not a real location,Demo District,Demo City,Demo School Contact 04,school4@example.invalid,DEMO-CB,Active

@@ -1,0 +1,41 @@
+{
+  "name": "@khel/api",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "db:generate-schema": "python3 scripts/generate-schema.py ../../spec/specification_catalogue.json prisma/schema.prisma",
+    "db:validate": "prisma validate",
+    "db:format": "prisma format",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset --force",
+    "db:seed": "tsx src/seed/index.ts",
+    "db:studio": "prisma studio"
+  },
+  "prisma": { "seed": "tsx src/seed/index.ts" },
+  "dependencies": {
+    "@khel/contracts": "*",
+    "@khel/rules": "*",
+    "@prisma/client": "^5.22.0",
+    "fastify": "^5.1.0",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/rate-limit": "^10.2.1",
+    "@fastify/cookie": "^11.0.1",
+    "zod": "^3.23.8",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.9.0"
+  }
+}

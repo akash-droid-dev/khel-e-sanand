@@ -1,0 +1,11 @@
+{
+  "name": "Khelo Sanand BalOlympiad",
+  "short_name": "Khelo Sanand",
+  "description": "Event operations for the Khelo Sanand BalOlympiad",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#0b3d2c",
+  "orientation": "portrait-primary",
+  "lang": "gu"
+}

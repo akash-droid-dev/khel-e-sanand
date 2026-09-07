@@ -1,0 +1,29 @@
+{
+  "name": "khel-e-sanand",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Khelo Sanand BalOlympiad — event operations platform (Event Director / Cluster Head / Volunteer)",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "engines": { "node": ">=20.10.0" },
+  "scripts": {
+    "build": "npm run build -w @khel/contracts && npm run build -w @khel/rules && npm run build -w @khel/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @khel/rules && npm run test -w @khel/api",
+    "test:rules": "npm run test -w @khel/rules",
+    "dev:api": "npm run dev -w @khel/api",
+    "dev:web": "npm run dev -w @khel/web",
+    "db:up": "docker compose up -d postgres",
+    "db:migrate": "npm run db:migrate -w @khel/api",
+    "db:seed": "npm run db:seed -w @khel/api",
+    "db:reset": "npm run db:reset -w @khel/api"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.8"
+  }
+}

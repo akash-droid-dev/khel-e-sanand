@@ -1,0 +1,47 @@
+# Local development stack.
+# §14 names PostgreSQL as the store; the spec's transactional guarantees
+# (overlapping-assignment protection, entry caps, stock issues, primary scorecard
+# ownership) rely on real transactions, so there is no SQLite fallback.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: khel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: khel
+      POSTGRES_PASSWORD: khel_dev_only
+      POSTGRES_DB: khel_sanand
+      # Timezone-aware storage; the application derives event_local_date (§1).
+      TZ: UTC
+    ports: ["5432:5432"]
+    volumes:
+      - khel_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U khel -d khel_sanand"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Private object storage for documents and generated exports (§14).
+  # Documents are never served directly; the API issues short-lived signed URLs
+  # after a server-side authorisation check (§5, AT-012).
+  minio:
+    image: minio/minio:latest
+    container_name: khel-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: khel
+      MINIO_ROOT_PASSWORD: khel_dev_only
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - khel_miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  khel_pgdata:
+  khel_miniodata:

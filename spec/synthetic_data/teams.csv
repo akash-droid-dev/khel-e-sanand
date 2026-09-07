@@ -1,0 +1,9 @@
+﻿team_code,school_code,competition_code,name,roster_status,note
+DEMO-KAB-A,DEMO-S001,DEMO-KAB,Demo KAB Team A,Draft,"Team size is an illustrative test value, not approved"
+DEMO-KAB-B,DEMO-S002,DEMO-KAB,Demo KAB Team B,Draft,"Team size is an illustrative test value, not approved"
+DEMO-KHO-A,DEMO-S001,DEMO-KHO,Demo KHO Team A,Draft,"Team size is an illustrative test value, not approved"
+DEMO-KHO-B,DEMO-S002,DEMO-KHO,Demo KHO Team B,Draft,"Team size is an illustrative test value, not approved"
+DEMO-TOW-A,DEMO-S001,DEMO-TOW,Demo TOW Team A,Draft,"Team size is an illustrative test value, not approved"
+DEMO-TOW-B,DEMO-S002,DEMO-TOW,Demo TOW Team B,Draft,"Team size is an illustrative test value, not approved"
+DEMO-VOL-A,DEMO-S001,DEMO-VOL,Demo VOL Team A,Draft,"Team size is an illustrative test value, not approved"
+DEMO-VOL-B,DEMO-S002,DEMO-VOL,Demo VOL Team B,Draft,"Team size is an illustrative test value, not approved"

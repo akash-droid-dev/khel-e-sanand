@@ -1,0 +1,307 @@
+{
+  "_readme": [
+    "Explicit additions layered on top of the generated schema.",
+    "The generated section is a faithful transcription of the specification's 823",
+    "field contracts. Everything here is a deliberate addition — either an",
+    "India-specific requirement the jurisdiction-neutral spec leaves open, or a",
+    "constraint §14 mandates in prose but the field list cannot express.",
+    "Each entry carries a `why` so a reviewer can challenge it."
+  ],
+  "extra_fields": {
+    "Event": [
+      {
+        "line": "academic_year                      String?",
+        "why": "GAP-IN-09. Indian school editions are labelled '2026-27' because the academic year spans June–April. The spec's edition label is free text; validated against ACADEMIC_YEAR_RE."
+      },
+      {
+        "line": "default_locale                     Locale   @default(gu)",
+        "why": "GAP-IN-11. §1 lists Gujarati/Hindi/English as OPTIONAL. For a Sanand event Gujarati is the working language, so it is the default rather than an opt-in."
+      }
+    ],
+    "School": [
+      {
+        "line": "name_local                         String?",
+        "why": "GAP-IN-05. §1 requires names retain their original script. Holds the Gujarati/Devanagari school name."
+      },
+      {
+        "line": "udise_code                         String?",
+        "why": "GAP-IN-02. The 11-digit UDISE+ code issued by the Ministry of Education. Makes the school master reconcilable with government data and survives renames. Optional: some private unaided schools cannot supply it at registration, and blocking on it is worse than missing it."
+      },
+      {
+        "line": "state_code                         String?",
+        "why": "GAP-IN-01. ISO 3166-2:IN subdivision code. Needed once an event spans more than one district."
+      },
+      {
+        "line": "taluka                             String?",
+        "why": "GAP-IN-01. India's operational hierarchy is State → District → Taluka → City/Village. Sanand is a taluka of Ahmedabad district; without this level the catchment cannot be expressed."
+      },
+      {
+        "line": "pincode                            String?",
+        "why": "GAP-IN-01. The only machine-checkable locality key in an Indian address."
+      },
+      {
+        "line": "board                              SchoolBoard?",
+        "why": "GAP-IN-02. Affiliation (GSEB/CBSE/…) determines how standards map to age bands."
+      },
+      {
+        "line": "management_type                    SchoolManagement?",
+        "why": "GAP-IN-02. Government and municipal schools route approvals through the education department; private unaided do not. Operationally significant for CH assignment."
+      },
+      {
+        "line": "medium_of_instruction              MediumOfInstruction?",
+        "why": "GAP-IN-02. Drives the default UI language for that school's staff and the language of printed start lists."
+      }
+    ],
+    "Athlete": [
+      {
+        "line": "display_name_local                 String?",
+        "why": "GAP-IN-05. The child's name in Gujarati/Devanagari as the school register writes it."
+      },
+      {
+        "line": "given_name                         String?",
+        "why": "GAP-IN-05. Optional component for sorting only. Never required — a meaningful minority of Indian names are single-token, and forcing a surname produces junk."
+      },
+      {
+        "line": "family_name                        String?",
+        "why": "GAP-IN-05. As above; optional by design."
+      }
+    ],
+    "AthleteRegistration": [
+      {
+        "line": "standard                           Standard?",
+        "why": "GAP-IN-03. India's school unit is the Standard (1–12), not a US grade. Lives on the registration, not the athlete, because a child's class changes each edition. §5 requires class stay separate from age."
+      },
+      {
+        "line": "section                            String?",
+        "why": "GAP-IN-03. Division within a standard ('A', 'B'). Used to locate a child on the school register during verification."
+      }
+    ],
+    "Category": [
+      {
+        "line": "participation_category             ParticipationCategory @default(Open)",
+        "why": "GAP-IN-08. A competition is (age band × participation category). §5 forbids inferring this from names or photos, so it is declared explicitly."
+      },
+      {
+        "line": "under_age_years                    Int?",
+        "why": "GAP-IN-08. Expresses an 'Under-14' band directly, so the cutoff rule is auditable rather than only implied by dob_min/dob_max."
+      }
+    ],
+    "Document": [
+      {
+        "line": "document_type_code                 DocumentType?",
+        "why": "GAP-IN-06. The spec's document_type is free text. A closed vocabulary lets the service refuse retention of the types that must not be kept."
+      },
+      {
+        "line": "retention_expires_at               DateTime? @db.Timestamptz(3)",
+        "why": "GAP-IN-06/07. §13 requires retention policy to distinguish operational results from personal documents. An explicit expiry makes the purge job possible and auditable."
+      },
+      {
+        "line": "sighted_last_four                  String?",
+        "why": "GAP-IN-06. Where an auditor must reconcile one record, only the last four digits are held. The full identity number is never stored — see docs/INDIA_DATA_MODEL.md."
+      }
+    ],
+    "VolunteerProfile": [
+      {
+        "line": "preferred_locale                   Locale?",
+        "why": "GAP-IN-11. The existing `language` column is free text; this is the closed vocabulary the UI actually switches on."
+      },
+      {
+        "line": "mobile_e164                        String?",
+        "why": "GAP-IN-04. Normalised +91XXXXXXXXXX for staff contact. Unique only where the login-identifier policy says so — never on athletes."
+      }
+    ],
+    "KitEntitlement": [
+      {
+        "line": "is_required                        Boolean  @default(true)",
+        "why": "§9 requires optional kit items that never make a kit Partial (AT-023). Encoding 'optional' as required_quantity = 0 would overload a quantity to mean 'not applicable' — precisely what §1 forbids ('A missing value is not equivalent to zero, absent, invalid or not applicable'). An explicit flag also lets an optional item carry a real quantity, e.g. up to 2 caps on request."
+      }
+    ]
+  },
+  "extra_indexes": {
+    "Event": [
+      "@@unique([event_code])"
+    ],
+    "School": [
+      "@@unique([school_code])",
+      "@@unique([udise_code])",
+      "@@index([district, taluka])"
+    ],
+    "EventSchool": [
+      "@@unique([event_id, school_id])",
+      "@@index([event_id, participation_status])"
+    ],
+    "Cluster": [
+      "@@unique([event_id, cluster_code])"
+    ],
+    "Venue": [
+      "@@unique([event_id, name])"
+    ],
+    "VenueResource": [
+      "@@unique([venue_id, resource_code])",
+      "@@index([event_id, resource_type])"
+    ],
+    "ResourceAvailability": [
+      "@@index([resource_id, starts_at, ends_at])"
+    ],
+    "User": [
+      "@@unique([user_code])"
+    ],
+    "EventMembership": [
+      "@@unique([event_id, user_id])",
+      "@@index([event_id, role, status])"
+    ],
+    "ScopeGrant": [
+      "@@index([event_id, membership_id, expires_at])"
+    ],
+    "SchoolCHAssignment": [
+      "@@index([event_id, event_school_id, effective_from])",
+      "@@index([event_id, ch_membership_id])"
+    ],
+    "VolunteerPoolAssignment": [
+      "@@index([event_id, volunteer_membership_id, effective_from])"
+    ],
+    "VolunteerSchoolAssignment": [
+      "@@index([event_id, volunteer_membership_id])",
+      "@@index([event_id, event_school_id])"
+    ],
+    "FixtureAssignment": [
+      "@@index([event_id, fixture_id, duty_role, status])",
+      "@@index([event_id, membership_id, starts_at])"
+    ],
+    "Athlete": [
+      "@@unique([athlete_code])"
+    ],
+    "AthleteRegistration": [
+      "@@unique([event_id, event_athlete_code])",
+      "@@index([event_id, event_school_id, status])"
+    ],
+    "CompetitionEntry": [
+      "@@unique([registration_id, competition_id])",
+      "@@index([event_id, competition_id, entry_status, eligibility_status])"
+    ],
+    "Team": [
+      "@@unique([event_id, team_code])",
+      "@@index([event_id, competition_id, roster_status])"
+    ],
+    "TeamMember": [
+      "@@unique([team_id, entry_id])",
+      "@@index([event_id, entry_id])"
+    ],
+    "Document": [
+      "@@index([event_id, owner_type, owner_id])",
+      "@@index([retention_expires_at])"
+    ],
+    "ImportRow": [
+      "@@index([job_id, source_row_number])"
+    ],
+    "Category": [
+      "@@unique([event_id, category_code])"
+    ],
+    "Competition": [
+      "@@unique([event_id, competition_code])",
+      "@@index([event_id, discipline_id, category_id])"
+    ],
+    "CompetitionStage": [
+      "@@unique([competition_id, stage_code])",
+      "@@index([event_id, competition_id, sequence])"
+    ],
+    "RuleVersion": [
+      "@@index([event_id, discipline_id, approval_status])"
+    ],
+    "Fixture": [
+      "@@unique([event_id, fixture_code])",
+      "@@index([event_id, resource_id, scheduled_start, scheduled_end])",
+      "@@index([event_id, competition_id, stage_id])",
+      "@@index([event_id, lifecycle, publication])"
+    ],
+    "FixtureParticipant": [
+      "@@index([event_id, fixture_id])",
+      "@@index([event_id, entry_id])",
+      "@@index([event_id, team_id])"
+    ],
+    "StartList": [
+      "@@unique([participant_id])",
+      "@@index([event_id, starting_order])"
+    ],
+    "DutySession": [
+      "@@unique([event_id, local_date, venue_id])"
+    ],
+    "ExpectedDuty": [
+      "@@unique([session_id, volunteer_id])"
+    ],
+    "Attendance": [
+      "@@unique([expected_duty_id])",
+      "@@index([event_id, status])"
+    ],
+    "KitEntitlement": [
+      "@@unique([event_id, volunteer_id, item_id, variant])"
+    ],
+    "KitIssue": [
+      "@@index([event_id, entitlement_id, issued_at])"
+    ],
+    "StockMovement": [
+      "@@index([event_id, location_id, item_id, created_at])"
+    ],
+    "Scorecard": [
+      "@@unique([fixture_id])"
+    ],
+    "ScorecardRevision": [
+      "@@unique([scorecard_id, revision_no])",
+      "@@index([event_id, status])"
+    ],
+    "ScoreObservation": [
+      "@@index([revision_id, sequence])"
+    ],
+    "ReviewAction": [
+      "@@index([event_id, revision_id, created_at])"
+    ],
+    "ResultSnapshot": [
+      "@@index([event_id, revision_id])",
+      "@@index([event_id, participant_id])"
+    ],
+    "NotificationRecipient": [
+      "@@index([event_id, membership_id, read_at])"
+    ],
+    "AuditEvent": [
+      "@@index([event_id, created_at])",
+      "@@index([event_id, actor_id])",
+      "@@index([event_id, entity_type, entity_id])"
+    ],
+    "ExceptionCase": [
+      "@@index([event_id, status, priority])"
+    ],
+    "JobRun": [
+      "@@index([event_id, status, created_at])"
+    ],
+    "Sport": [
+      "@@unique([code])"
+    ],
+    "Discipline": [
+      "@@unique([code])",
+      "@@index([sport_id])"
+    ]
+  },
+  "field_overrides": {
+    "_why": "Where the generated type is too loose to enforce a rule the spec states in prose.",
+    "Document.document_type": {
+      "line": "document_type                      String   /// Legacy free-text label; document_type_code is authoritative",
+      "why": "Kept for import compatibility, superseded by the closed vocabulary."
+    }
+  },
+  "extra_back_relations": {
+    "_why": "Back-relation fields the overlay models require on generated models. Prisma needs both sides declared.",
+    "Event": [
+      "guardians                                    Guardian[]",
+      "consent_records                              ConsentRecord[]",
+      "idempotency_keys                             IdempotencyKey[]",
+      "outbox_messages                              OutboxMessage[]"
+    ],
+    "Athlete": [
+      "guardians                                    Guardian[]",
+      "consent_records                              ConsentRecord[]"
+    ],
+    "Document": [
+      "consent_evidence                             ConsentRecord[]"
+    ]
+  }
+}

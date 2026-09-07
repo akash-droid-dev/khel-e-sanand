@@ -1,0 +1,2 @@
+﻿category_code,name,dob_min,dob_max,approval_status,note
+DEMO-CATEGORY,Illustrative Category Only,2012-12-02,2020-12-01,Draft,Synthetic DOB bounds; not proposed real age policy

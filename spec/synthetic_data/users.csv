@@ -1,0 +1,8 @@
+﻿user_code,display_name,email,role,pool_ch_code,status
+DEMO-ED1,Demo Event Director,ed@example.invalid,ED,,Active
+DEMO-CH1,Demo Cluster Head 1,ch1@example.invalid,CH,,Active
+DEMO-CH2,Demo Cluster Head 2,ch2@example.invalid,CH,,Active
+DEMO-V1,Demo Volunteer 1,vol1@example.invalid,VOL,DEMO-CH1,Active
+DEMO-V2,Demo Volunteer 2,vol2@example.invalid,VOL,DEMO-CH1,Active
+DEMO-V3,Demo Volunteer 3,vol3@example.invalid,VOL,DEMO-CH2,Active
+DEMO-V4,Demo Volunteer 4,vol4@example.invalid,VOL,DEMO-CH2,Active

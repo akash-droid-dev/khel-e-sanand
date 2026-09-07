@@ -1,0 +1,14 @@
+﻿fixture_code,competition_code,resource_code,scheduled_start,scheduled_end,primary_scorer_code,reviewer_code,status,note,stage_code
+DEMO-F001,DEMO-KAB,DEMO-R-KAB,2026-12-01T08:00:00+05:30,2026-12-01T08:20:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-KAB-ST1
+DEMO-F002,DEMO-SP30,DEMO-R-SP30,2026-12-01T08:45:00+05:30,2026-12-01T09:05:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-SP30-ST1
+DEMO-F003,DEMO-SP50,DEMO-R-SP50,2026-12-01T09:30:00+05:30,2026-12-01T09:50:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-SP50-ST1
+DEMO-F004,DEMO-SP60,DEMO-R-SP60,2026-12-01T10:15:00+05:30,2026-12-01T10:35:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-SP60-ST1
+DEMO-F005,DEMO-KHO,DEMO-R-KHO,2026-12-01T11:00:00+05:30,2026-12-01T11:20:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-KHO-ST1
+DEMO-F006,DEMO-SBT,DEMO-R-SBT,2026-12-01T11:45:00+05:30,2026-12-01T12:05:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-SBT-ST1
+DEMO-F007,DEMO-KJT,DEMO-R-KJT,2026-12-01T12:30:00+05:30,2026-12-01T12:50:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-KJT-ST1
+DEMO-F008,DEMO-CYC,DEMO-R-CYC,2026-12-01T13:15:00+05:30,2026-12-01T13:35:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-CYC-ST1
+DEMO-F009,DEMO-CHE,DEMO-R-CHE,2026-12-01T14:00:00+05:30,2026-12-01T14:20:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-CHE-ST1
+DEMO-F010,DEMO-SBJ,DEMO-R-SBJ,2026-12-01T14:45:00+05:30,2026-12-01T15:05:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-SBJ-ST1
+DEMO-F011,DEMO-TOW,DEMO-R-TOW,2026-12-01T15:30:00+05:30,2026-12-01T15:50:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-TOW-ST1
+DEMO-F012,DEMO-BAD,DEMO-R-BAD,2026-12-01T16:15:00+05:30,2026-12-01T16:35:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-BAD-ST1
+DEMO-F013,DEMO-VOL,DEMO-R-VOL,2026-12-01T17:00:00+05:30,2026-12-01T17:20:00+05:30,DEMO-V1,DEMO-CH1,Draft,Synthetic date/resource; no actual event schedule,DEMO-VOL-ST1

@@ -1,0 +1,254 @@
+// ============================================================================
+//  India-specific models — added to the specification's 65 entities.
+//  Rationale in docs/INDIA_DATA_MODEL.md; each is a gap the jurisdiction-neutral
+//  specification leaves open that an Indian school deployment cannot ignore.
+// ============================================================================
+
+enum SchoolBoard {
+  GSEB
+  CBSE
+  ICSE
+  NIOS
+  IB
+  IGCSE
+  Other
+}
+
+/// UDISE+ management categories. Determines the approval route for a school.
+enum SchoolManagement {
+  Government
+  LocalBody
+  GovernmentAided
+  PrivateUnaided
+  CentralGovernment
+  Other
+}
+
+enum MediumOfInstruction {
+  Gujarati
+  Hindi
+  English
+  Marathi
+  Other
+}
+
+/// India's school unit is the Standard, not a US-style grade.
+enum Standard {
+  Balvatika
+  Std1
+  Std2
+  Std3
+  Std4
+  Std5
+  Std6
+  Std7
+  Std8
+  Std9
+  Std10
+  Std11
+  Std12
+}
+
+/// Kept separate from the age band: a competition is (age band × participation category).
+/// §5 forbids inferring any of this from names or photographs — it is declared.
+enum ParticipationCategory {
+  Boys
+  Girls
+  Mixed
+  Open
+}
+
+enum GuardianRelation {
+  Father
+  Mother
+  LegalGuardian
+  Other
+}
+
+/// Purpose-scoped consent. "May we run the event" and "may this child's name appear
+/// on a public leaderboard" are different questions and are consented separately.
+enum ConsentPurpose {
+  EventParticipation
+  MedicalEmergency
+  PhotographyMedia
+  PublicResults
+}
+
+enum ConsentStatus {
+  Granted
+  Withdrawn
+  Expired
+}
+
+/// How the guardian's consent was verified. DPDP Act 2023 §9 says *verifiable* —
+/// a tick-box completed by a volunteer is not verification.
+enum ConsentMethod {
+  SignedPaperForm
+  SchoolAttested
+  DigitalOtpVerified
+}
+
+/// Identity documents. AadhaarSighted is a SIGHTING RECORD ONLY: this platform never
+/// stores an Aadhaar number. Aadhaar Act 2016 §29 restricts sharing of identity
+/// information, and a birth certificate or transfer certificate is the ordinary age
+/// proof for a school entry, so the capability is designed out rather than guarded.
+enum DocumentType {
+  BirthCertificate
+  SchoolBonafide
+  TransferCertificate
+  SchoolIdCard
+  AadhaarSighted
+  MedicalFitness
+  GuardianConsent
+  Photograph
+  Other
+}
+
+enum Locale {
+  gu
+  hi
+  en
+}
+
+/// M04+IN — A parent or lawful guardian of a registered athlete.
+/// Exists because DPDP Act 2023 §9 requires consent to come from an identified
+/// guardian, which in turn requires the guardian to be a record rather than a
+/// free-text contact string on the athlete.
+/// Scope: Event scoped
+model Guardian {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+  created_by                         String   @db.Uuid
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)
+  updated_by                         String   @db.Uuid
+  row_version                        Int      @default(1)
+
+  athlete_id                         String   @db.Uuid
+  athlete                            Athlete  @relation(fields: [athlete_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  relation                           GuardianRelation
+  full_name                          String   /// As written on the school register [Restricted]
+  full_name_local                    String?  /// Gujarati/Devanagari original [Restricted]
+  /// Normalised +91XXXXXXXXXX. Deliberately NOT unique: siblings share a handset,
+  /// and one number may cover an extended family (§3 warns against this assumption).
+  mobile_e164                        String?  /// [Restricted]
+  email                              String?  /// [Restricted]
+  /// The guardian whose consent is sought first. At most one per athlete.
+  is_primary                         Boolean  @default(false)
+  active                             Boolean  @default(true)
+
+  consents                           ConsentRecord[]
+
+  @@index([event_id, athlete_id])
+  @@index([event_id, mobile_e164])
+  @@map("guardians")
+}
+
+/// M04+IN — Verifiable guardian consent for one purpose.
+/// DPDP Act 2023 §9. Without an active EventParticipation consent an athlete cannot
+/// be entered, and Restricted fields cannot be read. Withdrawal is recorded, never
+/// deleted, so the audit trail survives (§13).
+/// Scope: Event scoped
+model ConsentRecord {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+  created_by                         String   @db.Uuid
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)
+  updated_by                         String   @db.Uuid
+  row_version                        Int      @default(1)
+
+  athlete_id                         String   @db.Uuid
+  athlete                            Athlete  @relation(fields: [athlete_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  guardian_id                        String   @db.Uuid
+  guardian                           Guardian @relation(fields: [guardian_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  purpose                            ConsentPurpose
+  status                             ConsentStatus  @default(Granted)
+  method                             ConsentMethod
+  /// Version of the consent notice the guardian was actually shown. Changing the
+  /// notice does not retroactively re-consent anyone.
+  notice_version                     String
+  /// Language the notice was presented in — consent to a notice nobody could read
+  /// is not consent.
+  notice_locale                      Locale
+  granted_at                         DateTime @db.Timestamptz(3)
+  /// Set on withdrawal. The row is never deleted.
+  withdrawn_at                       DateTime? @db.Timestamptz(3)
+  withdrawal_reason                  String?
+  /// Consent for a single edition does not roll forward silently.
+  expires_at                         DateTime? @db.Timestamptz(3)
+  /// Signed form or attestation held as evidence.
+  evidence_document_id               String?  @db.Uuid
+  evidence_document                  Document? @relation(fields: [evidence_document_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// Membership that recorded the consent — who is accountable for the verification.
+  recorded_by_membership_id          String   @db.Uuid
+
+  @@unique([athlete_id, purpose, granted_at])
+  @@index([event_id, athlete_id, purpose, status])
+  @@index([event_id, status, expires_at])
+  @@map("consent_records")
+}
+
+/// M12+IN — One row per idempotency key, committed in the same transaction as the
+/// business write it protects.
+/// §1: "Reusing the key with the same payload returns the original result; a
+/// different payload is rejected. The key and the business write commit together."
+/// That last clause is why this is a table and not a cache.
+/// Scope: Event scoped
+model IdempotencyKey {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+
+  /// Client-supplied key. Unique per (event, membership, command).
+  idempotency_key                    String
+  membership_id                      String   @db.Uuid
+  command                            String
+  /// SHA-256 of the canonical payload. A different hash under the same key is a
+  /// conflict, not a replay.
+  payload_hash                       String
+  /// The committed result, replayed verbatim on a retry.
+  response_body                      Json
+  response_status                    Int
+  /// Correlates the original request with its audit event.
+  request_id                         String
+
+  @@unique([event_id, membership_id, command, idempotency_key])
+  @@index([created_at])
+  @@map("idempotency_keys")
+}
+
+/// M10+IN — Transactional outbox.
+/// §1: "Outbound notification work is written with the business transaction to an
+/// outbox. A worker retries delivery. Repeated delivery cannot duplicate the
+/// business action." Modelled explicitly so score submission succeeds even when
+/// alert delivery is degraded (AT-028).
+/// Scope: Event scoped
+model OutboxMessage {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+
+  /// Domain event type, e.g. ScorecardSubmitted.
+  topic                              String
+  /// Minimal payload. §11 forbids athlete documents, family contacts or full DOB here.
+  payload                            Json
+  /// Deduplication key: event type + target version + recipient + channel (§11).
+  dedupe_key                         String
+  available_at                       DateTime @default(now()) @db.Timestamptz(3)
+  attempts                           Int      @default(0)
+  last_error                         String?
+  processed_at                       DateTime? @db.Timestamptz(3)
+  /// Surfaced to the ED after bounded retries are exhausted (§11).
+  dead_lettered_at                   DateTime? @db.Timestamptz(3)
+
+  @@unique([event_id, dedupe_key])
+  @@index([processed_at, available_at])
+  @@map("outbox_messages")
+}

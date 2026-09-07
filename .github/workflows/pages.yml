@@ -1,0 +1,66 @@
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a running deploy; queue behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build shared packages
+        run: |
+          npm run build -w @khel/contracts
+          npm run build -w @khel/rules
+
+      # The demo runs the real calculators in the browser and calls no API.
+      # VITE_BASE matches the repository name, because Pages serves a project
+      # site from /<repo>/ rather than the domain root.
+      - name: Build static demo
+        run: npm run build:demo -w @khel/web
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      # A single-page app needs every path to serve index.html. Pages has no
+      # rewrite rules, so the conventional trick is a 404 that is the app itself.
+      - name: Add SPA fallback
+        run: cp apps/web/dist-demo/index.html apps/web/dist-demo/404.html
+
+      # Jekyll would otherwise ignore files and folders beginning with an underscore.
+      - name: Disable Jekyll processing
+        run: touch apps/web/dist-demo/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist-demo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

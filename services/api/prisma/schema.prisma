@@ -1,0 +1,2374 @@
+// ============================================================================
+//  Khelo Sanand BalOlympiad — database schema
+//
+//  GENERATED from Khelo_Sanand_Specification/specification_catalogue.json
+//  (65 entities, 823 field contracts) by scripts/generate-schema.py, then
+//  extended with the India-specific model in prisma/overlay.prisma.
+//
+//  Regenerate:  npm run db:generate-schema
+//  Hand edits to the generated section will be overwritten. Put additions in
+//  overlay.prisma instead.
+//
+//  Conventions
+//  -----------
+//  * Field names stay snake_case, matching the specification's data dictionary
+//    verbatim so a reviewer can diff the two.
+//  * `created_by` / `updated_by` are Uuid columns WITHOUT Prisma relations.
+//    Modelling them would put 130 back-relations on User and make the client
+//    unusable; the foreign keys are added at SQL level in the migration.
+//  * Timestamps are timestamptz — §1 requires timezone-aware instants with
+//    event_local_date derived, never a naive local time.
+//  * Money-free by design: procurement and purchasing are out of scope (§9).
+// ============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- enums
+
+enum AmendmentStatus {
+  Requested
+  Review
+  Approved
+  Rejected
+  Applied
+}
+
+enum ApprovalStatus {
+  Draft
+  Approved
+}
+
+enum AssignmentStatus {
+  Assigned
+  Replaced
+  Cancelled
+}
+
+enum AttemptOutcome {
+  Success
+  RetryableFailure
+  PermanentFailure
+}
+
+enum AttendanceSource {
+  Self
+  CH
+  ED
+  OfflineClaim
+}
+
+enum AttendanceStatus {
+  Missing
+  Present
+  Late
+  Absent
+  Excused
+  PendingReview
+}
+
+enum AvailabilityKind {
+  Available
+  Blocked
+}
+
+enum CalculationFamily {
+  Raid
+  Turn
+  Time
+  Attempts
+  Chess
+  Pulls
+  Games
+  Sets
+}
+
+enum Channel {
+  InApp
+  Email
+  SMS
+  WhatsApp
+}
+
+enum CompetitionFormat {
+  Knockout
+  RoundRobin
+  GroupsKnockout
+  HeatsFinal
+  DirectFinal
+  Swiss
+}
+
+enum CompetitionStatus {
+  Draft
+  Published
+  Live
+  Closed
+}
+
+enum ConfigStatus {
+  Draft
+  Approved
+  Active
+  Retired
+}
+
+enum DeliveryStatus {
+  Pending
+  Delivered
+  Failed
+}
+
+enum DependencyStatus {
+  Pending
+  Resolved
+  Invalidated
+}
+
+enum DocumentOwnerType {
+  Athlete
+  Entry
+  Scorecard
+  Import
+}
+
+enum DutyRole {
+  PrimaryScorer
+  Support
+  Reviewer
+}
+
+enum DutySessionMode {
+  Daily
+  Shift
+}
+
+enum DutySessionStatus {
+  Open
+  Closed
+}
+
+enum EligibilityOutcome {
+  Pass
+  Fail
+  Pending
+  Override
+}
+
+enum EligibilityStatus {
+  Pending
+  Eligible
+  Ineligible
+  Exception
+}
+
+enum EntryStatus {
+  Draft
+  Active
+  Withdrawn
+}
+
+enum EventStatus {
+  Setup
+  Registration
+  Ready
+  Live
+  Closed
+  Archived
+}
+
+enum ExceptionPriority {
+  Low
+  Normal
+  Urgent
+}
+
+enum ExceptionStatus {
+  Open
+  InReview
+  Resolved
+  Rejected
+}
+
+enum Expectation {
+  Expected
+  Excused
+  Cancelled
+}
+
+enum FixtureLifecycle {
+  Draft
+  Ready
+  InProgress
+  Paused
+  Completed
+  Abandoned
+  Cancelled
+}
+
+enum FixtureParticipantStatus {
+  Expected
+  Confirmed
+  Withdrawn
+}
+
+enum ImportMode {
+  Create
+  Update
+  Upsert
+}
+
+enum ImportRowOutcome {
+  Created
+  Updated
+  Skipped
+  Failed
+  Pending
+}
+
+enum ImportStatus {
+  Queued
+  Validating
+  Preview
+  Running
+  Completed
+  Partial
+  Failed
+  Cancelled
+}
+
+enum JobStatus {
+  Queued
+  Running
+  Completed
+  Partial
+  Failed
+  Cancelled
+}
+
+enum MembershipStatus {
+  Invited
+  Active
+  Inactive
+}
+
+enum MovementType {
+  Receipt
+  Issue
+  Transfer
+  Return
+  Adjustment
+}
+
+enum ParticipantMode {
+  Individual
+  Team
+  Selectable
+}
+
+enum ParticipationStatus {
+  Invited
+  Active
+  Inactive
+  Withdrawn
+}
+
+enum Publication {
+  Unpublished
+  Published
+}
+
+enum PublicationAction {
+  Publish
+  Withdraw
+}
+
+enum PublicationAudience {
+  Internal
+  Public
+}
+
+enum RecoveryOutcome {
+  Running
+  Passed
+  Failed
+}
+
+enum RegistrationStatus {
+  Draft
+  Active
+  Withdrawn
+  Inactive
+}
+
+enum ReportStatus {
+  Queued
+  Running
+  Completed
+  Failed
+  Expired
+}
+
+enum ResourceType {
+  Court
+  Track
+  ThrowArea
+  JumpArea
+  CyclingCourse
+  ChessArea
+  TugArea
+}
+
+enum ResultStatus {
+  Completed
+  DNS
+  DNF
+  DQ
+  NM
+  Retired
+  Walkover
+  Bye
+}
+
+enum ReviewActionType {
+  Submit
+  Return
+  Approve
+  Lock
+  Override
+}
+
+enum RevisionStatus {
+  Draft
+  Submitted
+  Returned
+  Approved
+  Locked
+  Superseded
+}
+
+enum Role {
+  ED
+  CH
+  VOL
+}
+
+enum RosterStatus {
+  Draft
+  Locked
+}
+
+enum RuleApprovalStatus {
+  Draft
+  Approved
+  Retired
+}
+
+enum ScopeType {
+  School
+  Pool
+  Fixture
+  Cluster
+}
+
+enum SportParticipationStatus {
+  Active
+  Withdrawn
+}
+
+enum StageStatus {
+  Draft
+  Published
+  Completed
+}
+
+enum StageType {
+  Group
+  Heat
+  Final
+  KnockoutRound
+  ChessRound
+}
+
+enum VerificationStatus {
+  Pending
+  Verified
+  Rejected
+}
+
+// ---------------------------------------------------------------- models
+
+/// M01 — One event edition
+/// Scope: Global
+model Event {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  event_code                         String  /// Unique immutable event code
+  name                               String  /// Display name
+  timezone                           String  /// IANA timezone
+  start_date                         DateTime @db.Date  /// Event first day
+  end_date                           DateTime @db.Date  /// Event last day
+  status                             EventStatus
+  registration_opens_at              DateTime? @db.Timestamptz(3)  /// Entry window start
+  registration_closes_at             DateTime? @db.Timestamptz(3)  /// Entry window end
+  configuration_version              Int  /// Active approved settings version
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-09. Indian school editions are labelled '2026-27' because the academic year spans June–April. The spec's edition label is free text; validated against ACADEMIC_YEAR_RE.
+  academic_year                      String?
+  /// GAP-IN-11. §1 lists Gujarati/Hindi/English as OPTIONAL. For a Sanand event Gujarati is the working language, so it is the default rather than an opt-in.
+  default_locale                     Locale   @default(gu)
+  aggregate_snapshots                          AggregateSnapshot[]
+  amendments                                   Amendment[]
+  athlete_registrations                        AthleteRegistration[]
+  attendance_corrections                       AttendanceCorrection[]
+  attendances                                  Attendance[]
+  audit_events                                 AuditEvent[]
+  categories                                   Category[]
+  clusters                                     Cluster[]
+  competition_entries                          CompetitionEntry[]
+  competition_stages                           CompetitionStage[]
+  competitions                                 Competition[]
+  configuration_versions                       ConfigurationVersion[]
+  consent_records                              ConsentRecord[]
+  delivery_attempts                            DeliveryAttempt[]
+  documents                                    Document[]
+  duty_availabilities                          DutyAvailability[]
+  duty_sessions                                DutySession[]
+  eligibility_decisions                        EligibilityDecision[]
+  event_memberships                            EventMembership[]
+  event_schools                                EventSchool[]
+  exception_cases                              ExceptionCase[]
+  expected_duties                              ExpectedDuty[]
+  fixture_assignments                          FixtureAssignment[]
+  fixture_dependencies                         FixtureDependency[]
+  fixture_participants                         FixtureParticipant[]
+  fixtures                                     Fixture[]
+  guardians                                    Guardian[]
+  idempotency_keys                             IdempotencyKey[]
+  import_jobs                                  ImportJob[]
+  import_rows                                  ImportRow[]
+  job_runs                                     JobRun[]
+  kit_entitlements                             KitEntitlement[]
+  kit_issues                                   KitIssue[]
+  kit_items                                    KitItem[]
+  notification_events                          NotificationEvent[]
+  notification_recipients                      NotificationRecipient[]
+  outbox_messages                              OutboxMessage[]
+  recovery_runs                                RecoveryRun[]
+  report_jobs                                  ReportJob[]
+  resource_availabilities                      ResourceAvailability[]
+  result_publications                          ResultPublication[]
+  result_snapshots                             ResultSnapshot[]
+  review_actions                               ReviewAction[]
+  rule_versions                                RuleVersion[]
+  school_c_h_assignments                       SchoolCHAssignment[]
+  school_sport_participations                  SchoolSportParticipation[]
+  scope_grants                                 ScopeGrant[]
+  score_observations                           ScoreObservation[]
+  score_templates                              ScoreTemplate[]
+  scorecard_revisions                          ScorecardRevision[]
+  scorecards                                   Scorecard[]
+  start_lists                                  StartList[]
+  stock_locations                              StockLocation[]
+  stock_movements                              StockMovement[]
+  subscription_preferences                     SubscriptionPreference[]
+  team_members                                 TeamMember[]
+  teams                                        Team[]
+  venue_resources                              VenueResource[]
+  venues                                       Venue[]
+  volunteer_pool_assignments                   VolunteerPoolAssignment[]
+  volunteer_profiles                           VolunteerProfile[]
+  volunteer_school_assignments                 VolunteerSchoolAssignment[]
+
+  @@unique([event_code])
+  @@map("events")
+}
+
+/// M01 — Reusable school identity
+/// Scope: Global
+model School {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  school_code                        String  /// Canonical unique code
+  name                               String  /// School name
+  address                            String  /// Operational address [Restricted]
+  district                           String  /// District
+  city                               String  /// City
+  contact_name                       String  /// Responsible school contact
+  phone                              String?  /// Canonical contact number [Restricted]
+  email                              String?  /// Validated contact email [Restricted]
+  active                             Boolean  /// Global master status
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-05. §1 requires names retain their original script. Holds the Gujarati/Devanagari school name.
+  name_local                         String?
+  /// GAP-IN-02. The 11-digit UDISE+ code issued by the Ministry of Education. Makes the school master reconcilable with government data and survives renames. Optional: some private unaided schools cannot supply it at registration, and blocking on it is worse than missing it.
+  udise_code                         String?
+  /// GAP-IN-01. ISO 3166-2:IN subdivision code. Needed once an event spans more than one district.
+  state_code                         String?
+  /// GAP-IN-01. India's operational hierarchy is State → District → Taluka → City/Village. Sanand is a taluka of Ahmedabad district; without this level the catchment cannot be expressed.
+  taluka                             String?
+  /// GAP-IN-01. The only machine-checkable locality key in an Indian address.
+  pincode                            String?
+  /// GAP-IN-02. Affiliation (GSEB/CBSE/…) determines how standards map to age bands.
+  board                              SchoolBoard?
+  /// GAP-IN-02. Government and municipal schools route approvals through the education department; private unaided do not. Operationally significant for CH assignment.
+  management_type                    SchoolManagement?
+  /// GAP-IN-02. Drives the default UI language for that school's staff and the language of printed start lists.
+  medium_of_instruction              MediumOfInstruction?
+  event_schools                                EventSchool[]
+
+  @@unique([school_code])
+  @@unique([udise_code])
+  @@index([district, taluka])
+  @@map("schools")
+}
+
+/// M01 — School participation in an edition
+/// Scope: Event scoped
+model EventSchool {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  school_id                          String @db.Uuid  /// Reusable school
+  school                             School @relation(fields: [school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  participation_status               ParticipationStatus
+  notes                              String?  /// Scoped operational notes
+  athlete_registrations                        AthleteRegistration[]
+  school_c_h_assignments                       SchoolCHAssignment[]
+  school_sport_participations                  SchoolSportParticipation[]
+  teams                                        Team[]
+  volunteer_school_assignments                 VolunteerSchoolAssignment[]
+
+  @@unique([event_id, school_id])
+  @@index([event_id, participation_status])
+  @@map("event_schools")
+}
+
+/// M01 — Management cluster
+/// Scope: Event scoped
+model Cluster {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  cluster_code                       String  /// Event-unique code
+  name                               String  /// Display label
+  active                             Boolean  /// Availability for assignment
+  expected_duties                              ExpectedDuty[]
+  school_c_h_assignments                       SchoolCHAssignment[]
+  stock_locations                              StockLocation[]
+  volunteer_pool_assignments                   VolunteerPoolAssignment[]
+
+  @@unique([event_id, cluster_code])
+  @@map("clusters")
+}
+
+/// M01 — Physical operational location
+/// Scope: Event scoped
+model Venue {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  venue_code                         String  /// Event-unique code
+  name                               String  /// Venue name
+  address                            String  /// Operational address [Restricted]
+  contact_name                       String?  /// Venue contact
+  contact_phone                      String?  /// Operational phone [Restricted]
+  active                             Boolean  /// Available venue
+  duty_sessions                                DutySession[]
+  venue_resources                              VenueResource[]
+
+  @@unique([event_id, name])
+  @@map("venues")
+}
+
+/// M01 — Bookable pitch/court/track/board area
+/// Scope: Event scoped
+model VenueResource {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  venue_id                           String @db.Uuid  /// Parent location
+  venue                              Venue @relation(fields: [venue_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resource_code                      String  /// Unique code in venue
+  resource_type                      ResourceType
+  capacity                           Int  /// Concurrent slots
+  compatible_disciplines             Json  /// Allowed discipline codes
+  active                             Boolean  /// Available resource
+  fixtures                                     Fixture[]
+  resource_availabilities                      ResourceAvailability[]
+
+  @@unique([venue_id, resource_code])
+  @@index([event_id, resource_type])
+  @@map("venue_resources")
+}
+
+/// M01 — Resource booking windows
+/// Scope: Event scoped
+model ResourceAvailability {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  resource_id                        String @db.Uuid  /// Bookable resource
+  resource                           VenueResource @relation(fields: [resource_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  starts_at                          DateTime @db.Timestamptz(3)  /// Window start
+  ends_at                            DateTime @db.Timestamptz(3)  /// Window end
+  kind                               AvailabilityKind
+  reason                             String?  /// Closure or availability note
+
+  @@index([resource_id, starts_at, ends_at])
+  @@map("resource_availabilities")
+}
+
+/// M01 — School opts into competition
+/// Scope: Event scoped
+model SchoolSportParticipation {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  event_school_id                    String @db.Uuid  /// School edition
+  event_school                       EventSchool @relation(fields: [event_school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  competition_id                     String @db.Uuid  /// Permitted competition
+  competition                        Competition @relation(fields: [competition_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             SportParticipationStatus
+  @@map("school_sport_participations")
+}
+
+/// M02 — Staff identity
+/// Scope: Global
+model User {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  user_code                          String  /// Stable code
+  display_name                       String  /// User-facing name
+  mobile                             String?  /// Verified login/contact phone [Restricted]
+  email                              String?  /// Verified login/contact email [Restricted]
+  provider_subject                   String  /// External authentication identity [Secret/reference; never export]
+  active                             Boolean  /// Global account status
+  last_login_at                      DateTime? @db.Timestamptz(3)  /// Successful login time
+  amendments                                   Amendment[]
+  attendance_corrections                       AttendanceCorrection[]
+  attendances                                  Attendance[]
+  audit_events                                 AuditEvent[]
+  configuration_versions                       ConfigurationVersion[]
+  documents                                    Document[]
+  eligibility_decisions                        EligibilityDecision[]
+  event_memberships                            EventMembership[]
+  kit_issues                                   KitIssue[]
+  review_actions                               ReviewAction[]
+  rule_versions                                RuleVersion[]
+  scope_grants                                 ScopeGrant[]
+  sessions                                     Session[]
+
+  @@unique([user_code])
+  @@map("users")
+}
+
+/// M02 — Role within an event
+/// Scope: Event scoped
+model EventMembership {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  user_id                            String @db.Uuid  /// Staff identity
+  user                               User @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  role                               Role
+  status                             MembershipStatus
+  permissions_version                Int  /// Invalidates cached scope
+  duty_availabilities                          DutyAvailability[]
+  exception_cases                              ExceptionCase[]
+  expected_duties                              ExpectedDuty[]
+  fixture_assignments                          FixtureAssignment[]
+  fixtures                                     Fixture[]
+  kit_entitlements                             KitEntitlement[]
+  notification_recipients                      NotificationRecipient[]
+  report_jobs                                  ReportJob[]
+  school_c_h_assignments                       SchoolCHAssignment[]
+  scope_grants                                 ScopeGrant[]
+  subscription_preferences                     SubscriptionPreference[]
+  volunteer_pool_assignments_ch_membership_id  VolunteerPoolAssignment[] @relation("VolunteerPoolAssignment_ch_membership_id")
+  volunteer_pool_assignments_volunteer_membership_id VolunteerPoolAssignment[] @relation("VolunteerPoolAssignment_volunteer_membership_id")
+  volunteer_profiles                           VolunteerProfile[]
+  volunteer_school_assignments                 VolunteerSchoolAssignment[]
+
+  @@unique([event_id, user_id])
+  @@index([event_id, role, status])
+  @@map("event_memberships")
+}
+
+/// M02 — Limited self-service details
+/// Scope: Event scoped
+model VolunteerProfile {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  membership_id                      String @db.Uuid  /// VOL membership
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  skills                             Json?  /// Configured skill tags
+  language                           String  /// Preferred UI language
+  address                            String?  /// Optional correspondence address [Restricted]
+  emergency_name                     String?  /// Optional emergency contact [Restricted]
+  emergency_phone                    String?  /// Optional emergency phone [Restricted]
+  kit_size                           String?  /// Configured size variant
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-11. The existing `language` column is free text; this is the closed vocabulary the UI actually switches on.
+  preferred_locale                   Locale?
+  /// GAP-IN-04. Normalised +91XXXXXXXXXX for staff contact. Unique only where the login-identifier policy says so — never on athletes.
+  mobile_e164                        String?
+  @@map("volunteer_profiles")
+}
+
+/// M02 — Revocable login session
+/// Scope: Global
+model Session {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  user_id                            String @db.Uuid  /// Identity
+  user                               User @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  issued_at                          DateTime @db.Timestamptz(3)  /// Server issue time
+  expires_at                         DateTime @db.Timestamptz(3)  /// Absolute expiry
+  revoked_at                         DateTime? @db.Timestamptz(3)  /// Revocation
+  device_label                       String?  /// Safe device label
+  token_hash                         String  /// Hash/reference only [Secret/reference; never export]
+  @@map("sessions")
+}
+
+/// M02 — Explicit exceptional access
+/// Scope: Event scoped
+model ScopeGrant {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  membership_id                      String @db.Uuid  /// Recipient
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  action                             String  /// Specific permitted command
+  scope_type                         ScopeType
+  scope_id                           String @db.Uuid  /// Target record verified by type
+  expires_at                         DateTime @db.Timestamptz(3)  /// Finite expiry
+  reason                             String  /// Grant rationale
+  granted_by                         String @db.Uuid  /// Authorised ED
+  granted_by_ref                     User @relation(fields: [granted_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  revoked_at                         DateTime? @db.Timestamptz(3)  /// Revocation
+
+  @@index([event_id, membership_id, expires_at])
+  @@map("scope_grants")
+}
+
+/// M03 — Effective school manager
+/// Scope: Event scoped
+model SchoolCHAssignment {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  event_school_id                    String @db.Uuid  /// Assigned school
+  event_school                       EventSchool @relation(fields: [event_school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  cluster_id                         String @db.Uuid  /// Management cluster
+  cluster                            Cluster @relation(fields: [cluster_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  ch_membership_id                   String @db.Uuid  /// Responsible active CH
+  ch_membership                      EventMembership @relation(fields: [ch_membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  effective_from                     DateTime @db.Timestamptz(3)  /// Inclusive start
+  effective_to                       DateTime? @db.Timestamptz(3)  /// Exclusive end
+  reason                             String?  /// Reassignment rationale
+
+  @@index([event_id, event_school_id, effective_from])
+  @@index([event_id, ch_membership_id])
+  @@map("school_c_h_assignments")
+}
+
+/// M03 — CH pool membership
+/// Scope: Event scoped
+model VolunteerPoolAssignment {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  volunteer_membership_id            String @db.Uuid  /// VOL
+  volunteer_membership               EventMembership @relation(name: "VolunteerPoolAssignment_volunteer_membership_id", fields: [volunteer_membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  cluster_id                         String @db.Uuid  /// Pool cluster
+  cluster                            Cluster @relation(fields: [cluster_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  ch_membership_id                   String @db.Uuid  /// Pool manager
+  ch_membership                      EventMembership @relation(name: "VolunteerPoolAssignment_ch_membership_id", fields: [ch_membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  effective_from                     DateTime @db.Timestamptz(3)  /// Inclusive start
+  effective_to                       DateTime? @db.Timestamptz(3)  /// Exclusive end
+
+  @@index([event_id, volunteer_membership_id, effective_from])
+  @@map("volunteer_pool_assignments")
+}
+
+/// M03 — School support responsibility
+/// Scope: Event scoped
+model VolunteerSchoolAssignment {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  volunteer_membership_id            String @db.Uuid  /// VOL
+  volunteer_membership               EventMembership @relation(fields: [volunteer_membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  event_school_id                    String @db.Uuid  /// School
+  event_school                       EventSchool @relation(fields: [event_school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  responsibility                     String  /// Attendance/scoring/support label
+  effective_from                     DateTime @db.Timestamptz(3)  /// Inclusive start
+  effective_to                       DateTime? @db.Timestamptz(3)  /// Exclusive end
+
+  @@index([event_id, volunteer_membership_id])
+  @@index([event_id, event_school_id])
+  @@map("volunteer_school_assignments")
+}
+
+/// M03 — Scorer or reviewer responsibility
+/// Scope: Event scoped
+model FixtureAssignment {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  fixture_id                         String @db.Uuid  /// Assigned match/heat
+  fixture                            Fixture @relation(fields: [fixture_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membership_id                      String @db.Uuid  /// Assigned person
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  duty_role                          DutyRole
+  starts_at                          DateTime @db.Timestamptz(3)  /// Duty start
+  ends_at                            DateTime @db.Timestamptz(3)  /// Duty end
+  status                             AssignmentStatus
+
+  @@index([event_id, fixture_id, duty_role, status])
+  @@index([event_id, membership_id, starts_at])
+  @@map("fixture_assignments")
+}
+
+/// M03 — Staff availability windows
+/// Scope: Event scoped
+model DutyAvailability {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  membership_id                      String @db.Uuid  /// Person
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  starts_at                          DateTime @db.Timestamptz(3)  /// Availability start
+  ends_at                            DateTime @db.Timestamptz(3)  /// Availability end
+  available                          Boolean  /// Available or unavailable
+  note                               String?  /// Operational reason
+  @@map("duty_availabilities")
+}
+
+/// M04 — Stable athlete identity
+/// Scope: Global
+model Athlete {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  athlete_code                       String  /// Stable organisation identifier
+  display_name                       String  /// Name
+  date_of_birth                      DateTime? @db.Date  /// Required for DOB-based eligibility [Restricted]
+  category_attributes                Json?  /// Explicit supplied category facts
+  active                             Boolean  /// Identity status
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-05. The child's name in Gujarati/Devanagari as the school register writes it.
+  display_name_local                 String?
+  /// GAP-IN-05. Optional component for sorting only. Never required — a meaningful minority of Indian names are single-token, and forcing a surname produces junk.
+  given_name                         String?
+  /// GAP-IN-05. As above; optional by design.
+  family_name                        String?
+  athlete_registrations                        AthleteRegistration[]
+  consent_records                              ConsentRecord[]
+  guardians                                    Guardian[]
+
+  @@unique([athlete_code])
+  @@map("athletes")
+}
+
+/// M04 — Athlete in event and school
+/// Scope: Event scoped
+model AthleteRegistration {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  athlete_id                         String @db.Uuid  /// Identity
+  athlete                            Athlete @relation(fields: [athlete_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  event_school_id                    String @db.Uuid  /// Current event school
+  event_school                       EventSchool @relation(fields: [event_school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  event_athlete_code                 String  /// Unique edition code
+  status                             RegistrationStatus
+  grade                              String?  /// School grade distinct from age
+  notes                              String?  /// Scoped operations note
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-03. India's school unit is the Standard (1–12), not a US grade. Lives on the registration, not the athlete, because a child's class changes each edition. §5 requires class stay separate from age.
+  standard                           Standard?
+  /// GAP-IN-03. Division within a standard ('A', 'B'). Used to locate a child on the school register during verification.
+  section                            String?
+  competition_entries                          CompetitionEntry[]
+
+  @@unique([event_id, event_athlete_code])
+  @@index([event_id, event_school_id, status])
+  @@map("athlete_registrations")
+}
+
+/// M04 — Individual sport/category entry
+/// Scope: Event scoped
+model CompetitionEntry {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  registration_id                    String @db.Uuid  /// Athlete edition
+  registration                       AthleteRegistration @relation(fields: [registration_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  competition_id                     String @db.Uuid  /// Sport category competition
+  competition                        Competition @relation(fields: [competition_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  eligibility_status                 EligibilityStatus
+  eligibility_rule_id                String @db.Uuid  /// Evaluated rule
+  eligibility_rule                   RuleVersion @relation(fields: [eligibility_rule_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  entry_status                       EntryStatus
+  bib                                String?  /// Operational bib
+  seed_value                         Decimal? @db.Decimal(18, 6)  /// Optional prior performance
+  eligibility_decisions                        EligibilityDecision[]
+  fixture_participants                         FixtureParticipant[]
+  team_members                                 TeamMember[]
+
+  @@unique([registration_id, competition_id])
+  @@index([event_id, competition_id, entry_status, eligibility_status])
+  @@map("competition_entries")
+}
+
+/// M04 — Criterion evidence and review
+/// Scope: Event scoped
+model EligibilityDecision {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  entry_id                           String @db.Uuid  /// Entry
+  entry                              CompetitionEntry @relation(fields: [entry_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  criterion_code                     String  /// Eligibility criterion
+  supplied_value                     Json?  /// Restricted supporting value
+  outcome                            EligibilityOutcome
+  reason                             String  /// Reason trace
+  reviewer_id                        String? @db.Uuid  /// Human reviewer
+  reviewer                           User? @relation(fields: [reviewer_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reviewed_at                        DateTime? @db.Timestamptz(3)  /// Decision time
+  rule_version_id                    String @db.Uuid  /// Evaluated version
+  rule_version                       RuleVersion @relation(fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@map("eligibility_decisions")
+}
+
+/// M04 — Competition-specific school team
+/// Scope: Event scoped
+model Team {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  team_code                          String  /// Event unique
+  event_school_id                    String @db.Uuid  /// School
+  event_school                       EventSchool @relation(fields: [event_school_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  competition_id                     String @db.Uuid  /// One competition
+  competition                        Competition @relation(fields: [competition_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  name                               String  /// Team display name
+  roster_status                      RosterStatus
+  locked_at                          DateTime? @db.Timestamptz(3)  /// Roster freeze time
+  fixture_participants                         FixtureParticipant[]
+  team_members                                 TeamMember[]
+
+  @@unique([event_id, team_code])
+  @@index([event_id, competition_id, roster_status])
+  @@map("teams")
+}
+
+/// M04 — Eligible athlete in roster
+/// Scope: Event scoped
+model TeamMember {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  team_id                            String @db.Uuid  /// Team
+  team                               Team @relation(fields: [team_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  entry_id                           String @db.Uuid  /// Eligible entry in same competition
+  entry                              CompetitionEntry @relation(fields: [entry_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  jersey_number                      String?  /// Unique if required
+  position_label                     String?  /// Captain/role
+  active                             Boolean  /// Current roster participation
+
+  @@unique([team_id, entry_id])
+  @@index([event_id, entry_id])
+  @@map("team_members")
+}
+
+/// M04 — Private uploaded evidence
+/// Scope: Event scoped
+model Document {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  owner_type                         DocumentOwnerType
+  owner_id                           String @db.Uuid  /// Typed owner
+  document_type                      String   /// Legacy free-text label; document_type_code is authoritative
+  object_key                         String  /// Private storage reference [Restricted]
+  mime_type                          String  /// Validated content type
+  size_bytes                         Int  /// File size
+  checksum                           String  /// Integrity checksum
+  verification_status                VerificationStatus
+  verified_by                        String? @db.Uuid  /// Reviewer
+  verified_by_ref                    User? @relation(fields: [verified_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  verified_at                        DateTime? @db.Timestamptz(3)  /// Review time
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-06. The spec's document_type is free text. A closed vocabulary lets the service refuse retention of the types that must not be kept.
+  document_type_code                 DocumentType?
+  /// GAP-IN-06/07. §13 requires retention policy to distinguish operational results from personal documents. An explicit expiry makes the purge job possible and auditable.
+  retention_expires_at               DateTime? @db.Timestamptz(3)
+  /// GAP-IN-06. Where an auditor must reconcile one record, only the last four digits are held. The full identity number is never stored — see docs/INDIA_DATA_MODEL.md.
+  sighted_last_four                  String?
+  consent_evidence                             ConsentRecord[]
+  import_jobs_error_document_id                ImportJob[] @relation("ImportJob_error_document_id")
+  import_jobs_source_document_id               ImportJob[] @relation("ImportJob_source_document_id")
+  report_jobs                                  ReportJob[]
+
+  @@index([event_id, owner_type, owner_id])
+  @@index([retention_expires_at])
+  @@map("documents")
+}
+
+/// M04 — Durable import execution
+/// Scope: Event scoped
+model ImportJob {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  entity_type                        String  /// Template target
+  template_version                   String  /// Schema version
+  mode                               ImportMode
+  source_document_id                 String @db.Uuid  /// Original file
+  source_document                    Document @relation(name: "ImportJob_source_document_id", fields: [source_document_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  idempotency_key                    String  /// Retry identity
+  status                             ImportStatus
+  row_counts                         Json  /// Created/updated/skipped/failed/pending
+  error_document_id                  String? @db.Uuid  /// Row-level report
+  error_document                     Document? @relation(name: "ImportJob_error_document_id", fields: [error_document_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  import_rows                                  ImportRow[]
+  @@map("import_jobs")
+}
+
+/// M04 — Row/group lineage
+/// Scope: Event scoped
+model ImportRow {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  job_id                             String @db.Uuid  /// Parent job
+  job                                ImportJob @relation(fields: [job_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  source_row_number                  Int  /// Original spreadsheet row
+  group_key                          String?  /// Atomic roster/group
+  match_key                          String  /// Stable business key
+  outcome                            ImportRowOutcome
+  errors                             Json?  /// Column/error code/message
+  target_id                          String? @db.Uuid  /// Resolved business row
+  safe_input                         Json?  /// Redacted normalised input
+
+  @@index([job_id, source_row_number])
+  @@map("import_rows")
+}
+
+/// M05 — Confirmed game family
+/// Scope: Global
+model Sport {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  code                               String  /// Unique game code
+  name                               String  /// Display name
+  active                             Boolean  /// Enabled family
+  disciplines                                  Discipline[]
+
+  @@unique([code])
+  @@map("sports")
+}
+
+/// M05 — Specific competition event
+/// Scope: Global
+model Discipline {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  sport_id                           String @db.Uuid  /// Parent game
+  sport                              Sport @relation(fields: [sport_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  code                               String  /// Unique discipline code
+  name                               String  /// Display name
+  distance_m                         Decimal? @db.Decimal(18, 6)  /// Sprint or race nominal distance
+  calculation_family                 CalculationFamily
+  participant_mode                   ParticipantMode
+  competitions                                 Competition[]
+  rule_versions                                RuleVersion[]
+
+  @@unique([code])
+  @@index([sport_id])
+  @@map("disciplines")
+}
+
+/// M05 — Approved eligibility group
+/// Scope: Event scoped
+model Category {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  category_code                      String  /// Event unique
+  label                              String  /// Category display
+  dob_min                            DateTime? @db.Date  /// Inclusive earliest DOB
+  dob_max                            DateTime? @db.Date  /// Inclusive latest DOB
+  cutoff_date                        DateTime? @db.Date  /// Age evaluation date
+  criteria                           Json  /// Explicit participation criteria
+  approval_status                    ApprovalStatus
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// GAP-IN-08. A competition is (age band × participation category). §5 forbids inferring this from names or photos, so it is declared explicitly.
+  participation_category             ParticipationCategory @default(Open)
+  /// GAP-IN-08. Expresses an 'Under-14' band directly, so the cutoff rule is auditable rather than only implied by dob_min/dob_max.
+  under_age_years                    Int?
+  competitions                                 Competition[]
+
+  @@unique([event_id, category_code])
+  @@map("categories")
+}
+
+/// M05 — Immutable approved sport rules
+/// Scope: Event scoped
+model RuleVersion {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  discipline_id                      String @db.Uuid  /// Scoring discipline
+  discipline                         Discipline @relation(fields: [discipline_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  version_no                         Int  /// Rule version
+  approval_status                    RuleApprovalStatus
+  settings                           Json  /// Typed fields from Settings and Game_Profiles
+  source_reference                   String  /// Official/local source and edition
+  effective_from                     DateTime? @db.Date  /// Rule applicability
+  approved_by                        String? @db.Uuid  /// ED rule approver
+  approved_by_ref                    User? @relation(fields: [approved_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  approved_at                        DateTime? @db.Timestamptz(3)  /// Approval time
+  checksum                           String  /// Rule content hash
+  competition_entries                          CompetitionEntry[]
+  competitions                                 Competition[]
+  eligibility_decisions                        EligibilityDecision[]
+  fixtures                                     Fixture[]
+  score_templates                              ScoreTemplate[]
+  scorecard_revisions                          ScorecardRevision[]
+
+  @@index([event_id, discipline_id, approval_status])
+  @@map("rule_versions")
+}
+
+/// M05 — Typed score-entry form
+/// Scope: Event scoped
+model ScoreTemplate {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  rule_version_id                    String @db.Uuid  /// Rules
+  rule_version                       RuleVersion @relation(fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  template_version                   Int  /// Form version
+  fields_schema                      Json  /// Typed fields/units/required states
+  calculator_version                 String  /// Deterministic implementation version
+  preview_cases                      Json  /// Known valid/invalid examples
+  scorecard_revisions                          ScorecardRevision[]
+  @@map("score_templates")
+}
+
+/// M05 — Discipline + category + format
+/// Scope: Event scoped
+model Competition {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  competition_code                   String  /// Unique edition code
+  discipline_id                      String @db.Uuid  /// Event discipline
+  discipline                         Discipline @relation(fields: [discipline_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  category_id                        String @db.Uuid  /// Participation group
+  category                           Category @relation(fields: [category_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  format                             CompetitionFormat
+  rule_version_id                    String @db.Uuid  /// Approved profile
+  rule_version                       RuleVersion @relation(fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  entry_limit                        Int?  /// Capacity
+  status                             CompetitionStatus
+  competition_entries                          CompetitionEntry[]
+  competition_stages                           CompetitionStage[]
+  fixtures                                     Fixture[]
+  school_sport_participations                  SchoolSportParticipation[]
+  teams                                        Team[]
+
+  @@unique([event_id, competition_code])
+  @@index([event_id, discipline_id, category_id])
+  @@map("competitions")
+}
+
+/// M05 — Round or group
+/// Scope: Event scoped
+model CompetitionStage {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  competition_id                     String @db.Uuid  /// Parent competition
+  competition                        Competition @relation(fields: [competition_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  stage_code                         String  /// Unique within competition
+  stage_type                         StageType
+  sequence                           Int  /// Stage order
+  progression_rule                   Json  /// Place/time/standings qualification
+  status                             StageStatus
+  fixtures                                     Fixture[]
+
+  @@unique([competition_id, stage_code])
+  @@index([event_id, competition_id, sequence])
+  @@map("competition_stages")
+}
+
+/// M06 — Match/heat/board group
+/// Scope: Event scoped
+model Fixture {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  fixture_code                       String  /// Unique edition code
+  competition_id                     String @db.Uuid  /// Competition
+  competition                        Competition @relation(fields: [competition_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  stage_id                           String @db.Uuid  /// Round/group
+  stage                              CompetitionStage @relation(fields: [stage_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resource_id                        String @db.Uuid  /// Booked area
+  resource                           VenueResource @relation(fields: [resource_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  scheduled_start                    DateTime @db.Timestamptz(3)  /// Published plan start
+  scheduled_end                      DateTime @db.Timestamptz(3)  /// Planned end
+  reporting_at                       DateTime @db.Timestamptz(3)  /// Duty reporting time
+  actual_start                       DateTime? @db.Timestamptz(3)  /// Official start
+  actual_end                         DateTime? @db.Timestamptz(3)  /// Official end
+  lifecycle                          FixtureLifecycle
+  publication                        Publication
+  owner_ch_id                        String @db.Uuid  /// Accountable CH
+  owner_ch                           EventMembership @relation(fields: [owner_ch_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rule_version_id                    String @db.Uuid  /// Pinned rules
+  rule_version                       RuleVersion @relation(fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  fixture_assignments                          FixtureAssignment[]
+  fixture_dependencies_source_fixture_id       FixtureDependency[] @relation("FixtureDependency_source_fixture_id")
+  fixture_dependencies_target_fixture_id       FixtureDependency[] @relation("FixtureDependency_target_fixture_id")
+  fixture_participants                         FixtureParticipant[]
+  scorecards                                   Scorecard[]
+
+  @@unique([event_id, fixture_code])
+  @@index([event_id, resource_id, scheduled_start, scheduled_end])
+  @@index([event_id, competition_id, stage_id])
+  @@index([event_id, lifecycle, publication])
+  @@map("fixtures")
+}
+
+/// M06 — Individual or team slot
+/// Scope: Event scoped
+model FixtureParticipant {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  fixture_id                         String @db.Uuid  /// Match/heat
+  fixture                            Fixture @relation(fields: [fixture_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  entry_id                           String? @db.Uuid  /// Individual option
+  entry                              CompetitionEntry? @relation(fields: [entry_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  team_id                            String? @db.Uuid  /// Team option
+  team                               Team? @relation(fields: [team_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  slot                               String  /// A/B/lane/board/order
+  participation_snapshot             Json  /// Frozen name/school/roster
+  status                             FixtureParticipantStatus
+  result_snapshots                             ResultSnapshot[]
+  score_observations                           ScoreObservation[]
+  start_lists                                  StartList[]
+
+  @@index([event_id, fixture_id])
+  @@index([event_id, entry_id])
+  @@index([event_id, team_id])
+  @@map("fixture_participants")
+}
+
+/// M06 — Source result -> target slot
+/// Scope: Event scoped
+model FixtureDependency {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  source_fixture_id                  String @db.Uuid  /// Prior fixture
+  source_fixture                     Fixture @relation(name: "FixtureDependency_source_fixture_id", fields: [source_fixture_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  target_fixture_id                  String @db.Uuid  /// Next fixture
+  target_fixture                     Fixture @relation(name: "FixtureDependency_target_fixture_id", fields: [target_fixture_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  source_position                    String  /// Winner/loser/rank
+  target_slot                        String  /// Participant slot
+  result_snapshot_id                 String? @db.Uuid  /// Consumed source revision
+  result_snapshot                    ResultSnapshot? @relation(fields: [result_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             DependencyStatus
+  @@map("fixture_dependencies")
+}
+
+/// M06 — Sport-specific operational slots
+/// Scope: Event scoped
+model StartList {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  participant_id                     String @db.Uuid  /// Participant
+  participant                        FixtureParticipant @relation(fields: [participant_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lane_or_board                      String?  /// Physical slot
+  bib                                String?  /// Display bib
+  starting_order                     Int?  /// Queue order
+  official_start_at                  DateTime? @db.Timestamptz(3)  /// Cycling individual start
+  locked_at                          DateTime? @db.Timestamptz(3)  /// Start-list freeze
+
+  @@unique([participant_id])
+  @@index([event_id, starting_order])
+  @@map("start_lists")
+}
+
+/// M07 — Daily/shift attendance unit
+/// Scope: Event scoped
+model DutySession {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  session_code                       String  /// Unique edition code
+  local_date                         DateTime @db.Date  /// Event timezone date
+  mode                               DutySessionMode
+  starts_at                          DateTime @db.Timestamptz(3)  /// Duty window
+  ends_at                            DateTime @db.Timestamptz(3)  /// Duty end
+  venue_id                           String? @db.Uuid  /// Optional venue
+  venue                              Venue? @relation(fields: [venue_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             DutySessionStatus
+  expected_duties                              ExpectedDuty[]
+
+  @@unique([event_id, local_date, venue_id])
+  @@map("duty_sessions")
+}
+
+/// M07 — Expected attendance denominator
+/// Scope: Event scoped
+model ExpectedDuty {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  session_id                         String @db.Uuid  /// Duty
+  session                            DutySession @relation(fields: [session_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  volunteer_id                       String @db.Uuid  /// Expected VOL
+  volunteer                          EventMembership @relation(fields: [volunteer_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expectation                        Expectation
+  snapshot_cluster_id                String @db.Uuid  /// Historical reporting cluster
+  snapshot_cluster                   Cluster @relation(fields: [snapshot_cluster_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attendances                                  Attendance[]
+
+  @@unique([session_id, volunteer_id])
+  @@map("expected_duties")
+}
+
+/// M07 — One volunteer/session record
+/// Scope: Event scoped
+model Attendance {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  expected_duty_id                   String @db.Uuid  /// Expectation
+  expected_duty                      ExpectedDuty @relation(fields: [expected_duty_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  check_in_at                        DateTime? @db.Timestamptz(3)  /// Server accepted/approved check-in
+  check_out_at                       DateTime? @db.Timestamptz(3)  /// Optional checkout
+  claimed_client_at                  DateTime? @db.Timestamptz(3)  /// Untrusted offline claim
+  received_at                        DateTime @db.Timestamptz(3)  /// Server receipt
+  status                             AttendanceStatus
+  source                             AttendanceSource
+  final_override_by                  String? @db.Uuid  /// ED final authority
+  final_override_by_ref              User? @relation(fields: [final_override_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attendance_corrections                       AttendanceCorrection[]
+
+  @@unique([expected_duty_id])
+  @@index([event_id, status])
+  @@map("attendances")
+}
+
+/// M07 — Preserved correction
+/// Scope: Event scoped
+model AttendanceCorrection {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  attendance_id                      String @db.Uuid  /// Original attendance
+  attendance                         Attendance @relation(fields: [attendance_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  before_values                      Json  /// Prior effective fields
+  after_values                       Json  /// Approved change
+  reason                             String  /// Required correction rationale
+  actor_id                           String @db.Uuid  /// CH/ED
+  actor                              User @relation(fields: [actor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@map("attendance_corrections")
+}
+
+/// M08 — Distributable item
+/// Scope: Event scoped
+model KitItem {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  item_code                          String  /// Unique event code
+  name                               String  /// T-shirt/ID/cap etc
+  unit                               String  /// Piece or approved unit
+  variants                           Json?  /// Configured sizes
+  active                             Boolean  /// Available entitlement item
+  kit_entitlements                             KitEntitlement[]
+  stock_movements                              StockMovement[]
+  @@map("kit_items")
+}
+
+/// M08 — Volunteer requirement
+/// Scope: Event scoped
+model KitEntitlement {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  volunteer_id                       String @db.Uuid  /// VOL
+  volunteer                          EventMembership @relation(fields: [volunteer_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  item_id                            String @db.Uuid  /// Required item
+  item                               KitItem @relation(fields: [item_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  variant                            String?  /// Size
+  required_quantity                  Int  /// Required amount
+  entitlement_version                Int  /// Policy version
+
+  // --- India-specific additions (docs/INDIA_DATA_MODEL.md) ---
+  /// §9 requires optional kit items that never make a kit Partial (AT-023). Encoding 'optional' as required_quantity = 0 would overload a quantity to mean 'not applicable' — precisely what §1 forbids ('A missing value is not equivalent to zero, absent, invalid or not applicable'). An explicit flag also lets an optional item carry a real quantity, e.g. up to 2 caps on request.
+  is_required                        Boolean  @default(true)
+  kit_issues                                   KitIssue[]
+
+  @@unique([event_id, volunteer_id, item_id, variant])
+  @@map("kit_entitlements")
+}
+
+/// M08 — Optional physical stock location
+/// Scope: Event scoped
+model StockLocation {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  code                               String  /// Unique location code
+  name                               String  /// Location name
+  cluster_id                         String? @db.Uuid  /// Responsible cluster
+  cluster                            Cluster? @relation(fields: [cluster_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  kit_issues                                   KitIssue[]
+  stock_movements                              StockMovement[]
+  @@map("stock_locations")
+}
+
+/// M08 — Item handover and acknowledgement
+/// Scope: Event scoped
+model KitIssue {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  entitlement_id                     String @db.Uuid  /// Recipient requirement
+  entitlement                        KitEntitlement @relation(fields: [entitlement_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  quantity                           Int  /// Issued quantity
+  stock_location_id                  String? @db.Uuid  /// Source if stock enabled
+  stock_location                     StockLocation? @relation(fields: [stock_location_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  issued_at                          DateTime @db.Timestamptz(3)  /// Handover
+  issued_by                          String @db.Uuid  /// Issuer
+  issued_by_ref                      User @relation(fields: [issued_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  acknowledged_at                    DateTime? @db.Timestamptz(3)  /// VOL acknowledgement
+  reissue_of_id                      String? @db.Uuid  /// Original issue
+  reissue_of                         KitIssue? @relation(name: "KitIssue_reissue_of_id", fields: [reissue_of_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reason                             String?  /// Reissue/correction reason
+  idempotency_key                    String  /// Retry deduplication
+  kit_issues_reissue_of_id                     KitIssue[] @relation("KitIssue_reissue_of_id")
+  stock_movements                              StockMovement[]
+
+  @@index([event_id, entitlement_id, issued_at])
+  @@map("kit_issues")
+}
+
+/// M08 — Optional append-only quantity ledger
+/// Scope: Event scoped
+model StockMovement {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  location_id                        String @db.Uuid  /// Location
+  location                           StockLocation @relation(fields: [location_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  item_id                            String @db.Uuid  /// Item
+  item                               KitItem @relation(fields: [item_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  variant                            String?  /// Size
+  quantity_delta                     Int  /// Signed quantity
+  movement_type                      MovementType
+  issue_id                           String? @db.Uuid  /// Related handover
+  issue                              KitIssue? @relation(fields: [issue_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  transfer_group                     String? @db.Uuid  /// Links debit and credit
+  reason                             String  /// Movement rationale
+
+  @@index([event_id, location_id, item_id, created_at])
+  @@map("stock_movements")
+}
+
+/// M09 — One logical fixture sheet
+/// Scope: Event scoped
+model Scorecard {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  fixture_id                         String @db.Uuid  /// Fixture
+  fixture                            Fixture @relation(fields: [fixture_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  current_revision_no                Int  /// Current working/final revision
+  scorecard_revisions                          ScorecardRevision[]
+
+  @@unique([fixture_id])
+  @@map("scorecards")
+}
+
+/// M09 — Frozen/versioned score state
+/// Scope: Event scoped
+model ScorecardRevision {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  scorecard_id                       String @db.Uuid  /// Logical sheet
+  scorecard                          Scorecard @relation(fields: [scorecard_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  revision_no                        Int  /// Revision sequence
+  rule_version_id                    String @db.Uuid  /// Pinned rules
+  rule_version                       RuleVersion @relation(fields: [rule_version_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  template_id                        String @db.Uuid  /// Pinned form
+  template                           ScoreTemplate @relation(fields: [template_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             RevisionStatus
+  raw_payload                        Json  /// Typed observation snapshot [Restricted]
+  calculated_result                  Json  /// Deterministic provisional result
+  checksum                           String  /// Content hash
+  submitted_at                       DateTime? @db.Timestamptz(3)  /// Submission
+  locked_at                          DateTime? @db.Timestamptz(3)  /// Finalisation
+  amendments_original_revision_id              Amendment[] @relation("Amendment_original_revision_id")
+  amendments_replacement_revision_id           Amendment[] @relation("Amendment_replacement_revision_id")
+  result_snapshots                             ResultSnapshot[]
+  review_actions                               ReviewAction[]
+  score_observations                           ScoreObservation[]
+
+  @@unique([scorecard_id, revision_no])
+  @@index([event_id, status])
+  @@map("scorecard_revisions")
+}
+
+/// M09 — Typed sport event/attempt/result
+/// Scope: Event scoped
+model ScoreObservation {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  revision_id                        String @db.Uuid  /// Score revision
+  revision                           ScorecardRevision @relation(fields: [revision_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  observation_type                   String  /// Raid/Out/Attempt/Finish/Board/Pull/Game/Set
+  sequence                           Int  /// Ordering
+  participant_id                     String? @db.Uuid  /// Subject
+  participant                        FixtureParticipant? @relation(fields: [participant_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  payload                            Json  /// Game_Fields typed payload [Restricted]
+  supersedes_id                      String? @db.Uuid  /// Correction reference
+  supersedes                         ScoreObservation? @relation(name: "ScoreObservation_supersedes_id", fields: [supersedes_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  idempotency_key                    String  /// Input retry key
+  score_observations_supersedes_id             ScoreObservation[] @relation("ScoreObservation_supersedes_id")
+
+  @@index([revision_id, sequence])
+  @@map("score_observations")
+}
+
+/// M09 — Approval trail
+/// Scope: Event scoped
+model ReviewAction {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  revision_id                        String @db.Uuid  /// Exact reviewed content
+  revision                           ScorecardRevision @relation(fields: [revision_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  action                             ReviewActionType
+  actor_id                           String @db.Uuid  /// Responsible actor
+  actor                              User @relation(fields: [actor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  comment                            String?  /// Required on return/override
+  reviewed_checksum                  String  /// Revision checksum
+
+  @@index([event_id, revision_id, created_at])
+  @@map("review_actions")
+}
+
+/// M09 — Final classification source
+/// Scope: Event scoped
+model ResultSnapshot {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  revision_id                        String @db.Uuid  /// Locked source
+  revision                           ScorecardRevision @relation(fields: [revision_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  participant_id                     String @db.Uuid  /// Classified competitor
+  participant                        FixtureParticipant @relation(fields: [participant_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             ResultStatus
+  rank                               Int?  /// Rank if classified
+  primary_value                      Decimal? @db.Decimal(18, 6)  /// Unit-defined result
+  unit                               String?  /// Points/time/distance
+  tie_values                         Json?  /// Ordered tie evidence
+  identity_snapshot                  Json  /// Name/school at competition
+  fixture_dependencies                         FixtureDependency[]
+  result_publications                          ResultPublication[]
+
+  @@index([event_id, revision_id])
+  @@index([event_id, participant_id])
+  @@map("result_snapshots")
+}
+
+/// M09 — Controlled final-result change
+/// Scope: Event scoped
+model Amendment {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  original_revision_id               String @db.Uuid  /// Prior final
+  original_revision                  ScorecardRevision @relation(name: "Amendment_original_revision_id", fields: [original_revision_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  replacement_revision_id            String @db.Uuid  /// Proposed change
+  replacement_revision               ScorecardRevision @relation(name: "Amendment_replacement_revision_id", fields: [replacement_revision_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reason                             String  /// Required rationale
+  impact                             Json  /// Standings/progression effects
+  status                             AmendmentStatus
+  approved_by                        String? @db.Uuid  /// Named approver
+  approved_by_ref                    User? @relation(fields: [approved_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@map("amendments")
+}
+
+/// M10 — Transactional delivery outbox
+/// Scope: Event scoped
+model NotificationEvent {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  event_type                         String  /// Domain trigger
+  target_type                        String  /// Fixture/Scorecard/Assignment/Job
+  target_id                          String @db.Uuid  /// Affected record
+  target_version                     Int  /// Changed version
+  safe_payload                       Json  /// Minimal authorised summary [Restricted]
+  notification_recipients                      NotificationRecipient[]
+  @@map("notification_events")
+}
+
+/// M10 — Per-person inbox
+/// Scope: Event scoped
+model NotificationRecipient {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  notification_event_id              String @db.Uuid  /// Origin
+  notification_event                 NotificationEvent @relation(fields: [notification_event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membership_id                      String @db.Uuid  /// Recipient
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  channel                            Channel
+  read_at                            DateTime? @db.Timestamptz(3)  /// Inbox read receipt
+  delivery_status                    DeliveryStatus
+  action_target                      String  /// Authorised internal route
+  delivery_attempts                            DeliveryAttempt[]
+
+  @@index([event_id, membership_id, read_at])
+  @@map("notification_recipients")
+}
+
+/// M10 — Retry evidence
+/// Scope: Event scoped
+model DeliveryAttempt {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  recipient_id                       String @db.Uuid  /// Inbox recipient
+  recipient                          NotificationRecipient @relation(fields: [recipient_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attempt_no                         Int  /// Retry sequence
+  outcome                            AttemptOutcome
+  next_retry_at                      DateTime? @db.Timestamptz(3)  /// Backoff
+  safe_error                         String?  /// Redacted delivery error
+  @@map("delivery_attempts")
+}
+
+/// M11 — Export request and result
+/// Scope: Event scoped
+model ReportJob {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  requester_id                       String @db.Uuid  /// Requester
+  requester                          EventMembership @relation(fields: [requester_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  report_type                        String  /// Approved report template
+  filters                            Json  /// Scope-checked filter snapshot
+  columns                            Json  /// Authorised output columns
+  status                             ReportStatus
+  generated_at                       DateTime? @db.Timestamptz(3)  /// Data snapshot time
+  document_id                        String? @db.Uuid  /// Private export
+  document                           Document? @relation(fields: [document_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expires_at                         DateTime? @db.Timestamptz(3)  /// Download expiry
+  @@map("report_jobs")
+}
+
+/// M11 — Optional cached metrics
+/// Scope: Event scoped
+model AggregateSnapshot {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  metric_code                        String  /// Versioned definition
+  scope_filter                       Json  /// Authorised aggregate scope
+  values                             Json  /// Counts/denominators
+  calculated_at                      DateTime @db.Timestamptz(3)  /// Freshness
+  source_watermark                   String  /// Input revision marker
+  @@map("aggregate_snapshots")
+}
+
+/// M12 — Append-only business history
+/// Scope: Event scoped
+model AuditEvent {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  actor_id                           String @db.Uuid  /// User/service actor
+  actor                              User @relation(fields: [actor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  effective_role                     String  /// Role used
+  action                             String  /// Command name
+  entity_type                        String  /// Target type
+  entity_id                          String @db.Uuid  /// Target
+  safe_diff                          Json  /// Redacted before/after [Restricted]
+  reason                             String?  /// Mandatory for overrides
+  request_id                         String  /// Request correlation
+
+  @@index([event_id, created_at])
+  @@index([event_id, actor_id])
+  @@index([event_id, entity_type, entity_id])
+  @@map("audit_events")
+}
+
+/// M12 — Owned operational blocker
+/// Scope: Event scoped
+model ExceptionCase {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  case_type                          String  /// Tie/Amendment/Conflict/Abandonment/Sync/Job
+  entity_type                        String  /// Affected type
+  entity_id                          String @db.Uuid  /// Affected record
+  owner_id                           String @db.Uuid  /// Accountable user
+  owner                              EventMembership @relation(fields: [owner_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  status                             ExceptionStatus
+  priority                           ExceptionPriority
+  reason                             String  /// Problem
+  resolution                         String?  /// Recorded official/admin decision
+
+  @@index([event_id, status, priority])
+  @@map("exception_cases")
+}
+
+/// M12 — Typed admin settings
+/// Scope: Event scoped
+model ConfigurationVersion {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  version_no                         Int  /// Event setting version
+  settings                           Json  /// Known typed setting keys
+  status                             ConfigStatus
+  approved_by                        String? @db.Uuid  /// ED approval
+  approved_by_ref                    User? @relation(fields: [approved_by], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  effective_at                       DateTime? @db.Timestamptz(3)  /// Activation
+  impact_preview                     Json  /// Affected records
+  @@map("configuration_versions")
+}
+
+/// M12 — Restore rehearsal record
+/// Scope: Event scoped
+model RecoveryRun {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  backup_reference                   String  /// Safe backup identifier
+  initiated_at                       DateTime @db.Timestamptz(3)  /// Start
+  completed_at                       DateTime? @db.Timestamptz(3)  /// End
+  outcome                            RecoveryOutcome
+  evidence_reference                 String?  /// Safe operational proof
+  notes                              String?  /// Gaps and remediation
+  @@map("recovery_runs")
+}
+
+/// M12 — Generic background work
+/// Scope: Event scoped
+model JobRun {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  job_type                           String  /// Import/Report/Delivery/Reconcile
+  target_id                          String @db.Uuid  /// Business job
+  status                             JobStatus
+  attempts                           Int  /// Attempt count
+  progress                           Json  /// Durable counters
+  safe_error                         String?  /// Redacted failure
+  request_id                         String  /// Correlation
+
+  @@index([event_id, status, created_at])
+  @@map("job_runs")
+}
+
+/// M09 — Audience changes for a locked result
+/// Scope: Event scoped
+model ResultPublication {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  result_snapshot_id                 String @db.Uuid  /// Immutable result
+  result_snapshot                    ResultSnapshot @relation(fields: [result_snapshot_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  action                             PublicationAction
+  audience                           PublicationAudience
+  published_fields                   Json  /// Explicit permitted field list
+  reason                             String?  /// Withdrawal or revision explanation
+  @@map("result_publications")
+}
+
+/// M10 — Optional delivery preferences
+/// Scope: Event scoped
+model SubscriptionPreference {
+  id                                 String   @id @default(uuid()) @db.Uuid  /// Immutable primary key
+  event_id                           String @db.Uuid  /// Event boundary; same-event foreign keys required
+  event                              Event @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)  /// Server creation time
+  created_by                         String @db.Uuid  /// Creating actor or named service identity
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)  /// Last server change time
+  updated_by                         String @db.Uuid  /// Last actor
+  row_version                        Int      @default(1)  /// Monotonic optimistic concurrency version
+  membership_id                      String @db.Uuid  /// Recipient
+  membership                         EventMembership @relation(fields: [membership_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  channels                           Json  /// Selected enabled optional channels
+  digest_interval_minutes            Int?  /// Optional grouping
+  optional_triggers                  Json  /// Opt-in/out for nonrequired alerts
+  @@map("subscription_preferences")
+}
+
+// ============================================================================
+//  India-specific models — added to the specification's 65 entities.
+//  Rationale in docs/INDIA_DATA_MODEL.md; each is a gap the jurisdiction-neutral
+//  specification leaves open that an Indian school deployment cannot ignore.
+// ============================================================================
+
+enum SchoolBoard {
+  GSEB
+  CBSE
+  ICSE
+  NIOS
+  IB
+  IGCSE
+  Other
+}
+
+/// UDISE+ management categories. Determines the approval route for a school.
+enum SchoolManagement {
+  Government
+  LocalBody
+  GovernmentAided
+  PrivateUnaided
+  CentralGovernment
+  Other
+}
+
+enum MediumOfInstruction {
+  Gujarati
+  Hindi
+  English
+  Marathi
+  Other
+}
+
+/// India's school unit is the Standard, not a US-style grade.
+enum Standard {
+  Balvatika
+  Std1
+  Std2
+  Std3
+  Std4
+  Std5
+  Std6
+  Std7
+  Std8
+  Std9
+  Std10
+  Std11
+  Std12
+}
+
+/// Kept separate from the age band: a competition is (age band × participation category).
+/// §5 forbids inferring any of this from names or photographs — it is declared.
+enum ParticipationCategory {
+  Boys
+  Girls
+  Mixed
+  Open
+}
+
+enum GuardianRelation {
+  Father
+  Mother
+  LegalGuardian
+  Other
+}
+
+/// Purpose-scoped consent. "May we run the event" and "may this child's name appear
+/// on a public leaderboard" are different questions and are consented separately.
+enum ConsentPurpose {
+  EventParticipation
+  MedicalEmergency
+  PhotographyMedia
+  PublicResults
+}
+
+enum ConsentStatus {
+  Granted
+  Withdrawn
+  Expired
+}
+
+/// How the guardian's consent was verified. DPDP Act 2023 §9 says *verifiable* —
+/// a tick-box completed by a volunteer is not verification.
+enum ConsentMethod {
+  SignedPaperForm
+  SchoolAttested
+  DigitalOtpVerified
+}
+
+/// Identity documents. AadhaarSighted is a SIGHTING RECORD ONLY: this platform never
+/// stores an Aadhaar number. Aadhaar Act 2016 §29 restricts sharing of identity
+/// information, and a birth certificate or transfer certificate is the ordinary age
+/// proof for a school entry, so the capability is designed out rather than guarded.
+enum DocumentType {
+  BirthCertificate
+  SchoolBonafide
+  TransferCertificate
+  SchoolIdCard
+  AadhaarSighted
+  MedicalFitness
+  GuardianConsent
+  Photograph
+  Other
+}
+
+enum Locale {
+  gu
+  hi
+  en
+}
+
+/// M04+IN — A parent or lawful guardian of a registered athlete.
+/// Exists because DPDP Act 2023 §9 requires consent to come from an identified
+/// guardian, which in turn requires the guardian to be a record rather than a
+/// free-text contact string on the athlete.
+/// Scope: Event scoped
+model Guardian {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+  created_by                         String   @db.Uuid
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)
+  updated_by                         String   @db.Uuid
+  row_version                        Int      @default(1)
+
+  athlete_id                         String   @db.Uuid
+  athlete                            Athlete  @relation(fields: [athlete_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  relation                           GuardianRelation
+  full_name                          String   /// As written on the school register [Restricted]
+  full_name_local                    String?  /// Gujarati/Devanagari original [Restricted]
+  /// Normalised +91XXXXXXXXXX. Deliberately NOT unique: siblings share a handset,
+  /// and one number may cover an extended family (§3 warns against this assumption).
+  mobile_e164                        String?  /// [Restricted]
+  email                              String?  /// [Restricted]
+  /// The guardian whose consent is sought first. At most one per athlete.
+  is_primary                         Boolean  @default(false)
+  active                             Boolean  @default(true)
+
+  consents                           ConsentRecord[]
+
+  @@index([event_id, athlete_id])
+  @@index([event_id, mobile_e164])
+  @@map("guardians")
+}
+
+/// M04+IN — Verifiable guardian consent for one purpose.
+/// DPDP Act 2023 §9. Without an active EventParticipation consent an athlete cannot
+/// be entered, and Restricted fields cannot be read. Withdrawal is recorded, never
+/// deleted, so the audit trail survives (§13).
+/// Scope: Event scoped
+model ConsentRecord {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+  created_by                         String   @db.Uuid
+  updated_at                         DateTime @updatedAt @db.Timestamptz(3)
+  updated_by                         String   @db.Uuid
+  row_version                        Int      @default(1)
+
+  athlete_id                         String   @db.Uuid
+  athlete                            Athlete  @relation(fields: [athlete_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  guardian_id                        String   @db.Uuid
+  guardian                           Guardian @relation(fields: [guardian_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  purpose                            ConsentPurpose
+  status                             ConsentStatus  @default(Granted)
+  method                             ConsentMethod
+  /// Version of the consent notice the guardian was actually shown. Changing the
+  /// notice does not retroactively re-consent anyone.
+  notice_version                     String
+  /// Language the notice was presented in — consent to a notice nobody could read
+  /// is not consent.
+  notice_locale                      Locale
+  granted_at                         DateTime @db.Timestamptz(3)
+  /// Set on withdrawal. The row is never deleted.
+  withdrawn_at                       DateTime? @db.Timestamptz(3)
+  withdrawal_reason                  String?
+  /// Consent for a single edition does not roll forward silently.
+  expires_at                         DateTime? @db.Timestamptz(3)
+  /// Signed form or attestation held as evidence.
+  evidence_document_id               String?  @db.Uuid
+  evidence_document                  Document? @relation(fields: [evidence_document_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// Membership that recorded the consent — who is accountable for the verification.
+  recorded_by_membership_id          String   @db.Uuid
+
+  @@unique([athlete_id, purpose, granted_at])
+  @@index([event_id, athlete_id, purpose, status])
+  @@index([event_id, status, expires_at])
+  @@map("consent_records")
+}
+
+/// M12+IN — One row per idempotency key, committed in the same transaction as the
+/// business write it protects.
+/// §1: "Reusing the key with the same payload returns the original result; a
+/// different payload is rejected. The key and the business write commit together."
+/// That last clause is why this is a table and not a cache.
+/// Scope: Event scoped
+model IdempotencyKey {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+
+  /// Client-supplied key. Unique per (event, membership, command).
+  idempotency_key                    String
+  membership_id                      String   @db.Uuid
+  command                            String
+  /// SHA-256 of the canonical payload. A different hash under the same key is a
+  /// conflict, not a replay.
+  payload_hash                       String
+  /// The committed result, replayed verbatim on a retry.
+  response_body                      Json
+  response_status                    Int
+  /// Correlates the original request with its audit event.
+  request_id                         String
+
+  @@unique([event_id, membership_id, command, idempotency_key])
+  @@index([created_at])
+  @@map("idempotency_keys")
+}
+
+/// M10+IN — Transactional outbox.
+/// §1: "Outbound notification work is written with the business transaction to an
+/// outbox. A worker retries delivery. Repeated delivery cannot duplicate the
+/// business action." Modelled explicitly so score submission succeeds even when
+/// alert delivery is degraded (AT-028).
+/// Scope: Event scoped
+model OutboxMessage {
+  id                                 String   @id @default(uuid()) @db.Uuid
+  event_id                           String   @db.Uuid
+  event                              Event    @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  created_at                         DateTime @default(now()) @db.Timestamptz(3)
+
+  /// Domain event type, e.g. ScorecardSubmitted.
+  topic                              String
+  /// Minimal payload. §11 forbids athlete documents, family contacts or full DOB here.
+  payload                            Json
+  /// Deduplication key: event type + target version + recipient + channel (§11).
+  dedupe_key                         String
+  available_at                       DateTime @default(now()) @db.Timestamptz(3)
+  attempts                           Int      @default(0)
+  last_error                         String?
+  processed_at                       DateTime? @db.Timestamptz(3)
+  /// Surfaced to the ED after bounded retries are exhausted (§11).
+  dead_lettered_at                   DateTime? @db.Timestamptz(3)
+
+  @@unique([event_id, dedupe_key])
+  @@index([processed_at, available_at])
+  @@map("outbox_messages")
+}

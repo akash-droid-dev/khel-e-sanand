@@ -1,0 +1,14 @@
+﻿competition_code,discipline_code,category_code,category_note,format,rule_version,approval_status
+DEMO-KAB,KAB,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,Knockout,DEMO-DRAFT-1,Draft
+DEMO-SP30,SP30,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-SP50,SP50,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-SP60,SP60,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-KHO,KHO,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,Knockout,DEMO-DRAFT-1,Draft
+DEMO-SBT,SBT,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-KJT,KJT,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-CYC,CYC,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-CHE,CHE,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,RoundRobin,DEMO-DRAFT-1,Draft
+DEMO-SBJ,SBJ,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,DirectFinal,DEMO-DRAFT-1,Draft
+DEMO-TOW,TOW,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,Knockout,DEMO-DRAFT-1,Draft
+DEMO-BAD,BAD,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,Knockout,DEMO-DRAFT-1,Draft
+DEMO-VOL,VOL,DEMO-CATEGORY,Illustrative only; actual ages unconfirmed,Knockout,DEMO-DRAFT-1,Draft

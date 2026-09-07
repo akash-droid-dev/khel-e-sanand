@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-demo/
+.env
+*.log
+.DS_Store
+coverage/
+.vite/
+services/api/prisma/generated.prisma

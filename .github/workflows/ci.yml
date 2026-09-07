@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: khel
+          POSTGRES_PASSWORD: khel_dev_only
+          POSTGRES_DB: khel_sanand_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U khel"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://khel:khel_dev_only@localhost:5432/khel_sanand_test?schema=public
+      TEST_DATABASE_URL: postgresql://khel:khel_dev_only@localhost:5432/khel_sanand_test?schema=public
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The rules package is pure and needs no database, so build it first —
+      # a failure here is a calculator regression, not an environment problem.
+      - name: Build shared packages
+        run: |
+          npm run build -w @khel/contracts
+          npm run build -w @khel/rules
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Rules tests (142 — all 38 specification game vectors)
+        run: npm run test -w @khel/rules
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+        working-directory: services/api
+
+      - name: API tests (constraints + acceptance scenarios)
+        run: npm run test -w @khel/api
