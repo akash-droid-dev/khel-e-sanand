@@ -6,6 +6,16 @@ Head, Volunteer), thirteen sports, built from the planning specification in `spe
 Gujarati / Hindi / English. Offline-capable score entry. Built for the Indian school
 sports ecosystem — see [`docs/INDIA_DATA_MODEL.md`](docs/INDIA_DATA_MODEL.md).
 
+### ▶ [Live demo](https://akash-droid-dev.github.io/khel-e-sanand/)
+
+All thirteen discipline calculators running in your browser, in three languages, with
+the specification's own test vectors executing live. No server involved — the
+calculators are pure functions, so the arithmetic there is byte-for-byte the
+arithmetic the API runs.
+
+The demo has no permission chain, no audit trail and no persistence: those need the
+backend, and the banner says so rather than letting a viewer assume otherwise.
+
 ```
 190 tests passing  ·  69 tables  ·  287 foreign keys  ·  82 check constraints
 13 discipline calculators  ·  all 38 workbook game vectors covered
