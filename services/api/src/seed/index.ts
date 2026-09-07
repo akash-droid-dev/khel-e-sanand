@@ -135,17 +135,18 @@ async function main(): Promise<void> {
       disciplineCode.startsWith('SP') ? 'Athletics'
       : ['SBT', 'KJT', 'SBJ'].includes(disciplineCode) ? 'Athletics'
       : label;
-    let sportId = sportsByFamily[sportName];
-    if (!sportId) {
-      const sport = await prisma.sport.upsert({
-        where: { code: sportName.toUpperCase().slice(0, 12) },
-        update: {},
-        create: { ...audit, code: sportName.toUpperCase().slice(0, 12),
-                  name: sportName, active: true },
-      });
-      sportId = sport.id;
-      sportsByFamily[sportName] = sportId;
-    }
+    // Resolved without relying on control-flow narrowing of a mutable binding:
+    // the type of `sportsByFamily[...]` is `string | undefined` under
+    // noUncheckedIndexedAccess, and narrowing it through a reassignment is exactly
+    // the kind of inference that breaks when a dependency's types are unavailable.
+    const existingSportId = sportsByFamily[sportName];
+    const sportId: string = existingSportId ?? (await prisma.sport.upsert({
+      where: { code: sportName.toUpperCase().slice(0, 12) },
+      update: {},
+      create: { ...audit, code: sportName.toUpperCase().slice(0, 12),
+                name: sportName, active: true },
+    })).id;
+    sportsByFamily[sportName] = sportId;
     await prisma.discipline.upsert({
       where: { code: disciplineCode },
       update: {},

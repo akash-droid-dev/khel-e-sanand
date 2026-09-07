@@ -35,6 +35,13 @@ jobs:
 
       - run: npm ci
 
+      # The Prisma client is generated code, not a published artefact. Without this
+      # every Prisma type resolves to nothing and the typecheck fails with dozens of
+      # misleading "has no exported member" errors.
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: services/api
+
       # The rules package is pure and needs no database, so build it first —
       # a failure here is a calculator regression, not an environment problem.
       - name: Build shared packages

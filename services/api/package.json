@@ -16,9 +16,13 @@
     "db:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "tsx src/seed/index.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate"
   },
-  "prisma": { "seed": "tsx src/seed/index.ts" },
+  "prisma": {
+    "seed": "tsx src/seed/index.ts"
+  },
   "dependencies": {
     "@khel/contracts": "*",
     "@khel/rules": "*",

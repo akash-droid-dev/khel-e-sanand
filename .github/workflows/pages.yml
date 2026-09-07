@@ -28,6 +28,12 @@ jobs:
 
       - run: npm ci
 
+      # The demo bundles @khel/rules only, but the workspace install typechecks
+      # everything, so the generated client must exist.
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: services/api
+
       - name: Build shared packages
         run: |
           npm run build -w @khel/contracts
